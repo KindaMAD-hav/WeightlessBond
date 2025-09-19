@@ -53,7 +53,7 @@ public class FirstPersonController : MonoBehaviour
     public bool IsMoving => isMoving;
     public bool IsRunning => isRunning;
     public bool IsGrounded => isGrounded;
-    public float MovementSpeed => controller.velocity.magnitude;
+    public float MovementSpeed => new Vector3(controller.velocity.x, 0, controller.velocity.z).magnitude;
 
     void Start()
     {
@@ -125,9 +125,9 @@ public class FirstPersonController : MonoBehaviour
         // Get movement direction
         Vector3 move = transform.right * horizontal + transform.forward * vertical;
 
-        // Determine if moving
+        // Determine if moving - check both input AND actual velocity
         bool wasMoving = isMoving;
-        isMoving = move.magnitude > 0.1f;
+        isMoving = (move.magnitude > 0.1f) || (controller.velocity.magnitude > 0.5f);
 
         if (wasMoving != isMoving)
             OnMovingChanged?.Invoke(isMoving);
