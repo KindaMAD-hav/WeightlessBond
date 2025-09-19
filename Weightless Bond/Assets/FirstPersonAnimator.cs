@@ -1,245 +1,263 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
-public class FirstPersonAnimator : MonoBehaviour
+public class PlayerAnimationController : MonoBehaviour
 {
+    [Header("Animation Parameters")]
+    [SerializeField] private string moveSpeedParam = "MoveSpeed";
+    [SerializeField] private string isGroundedParam = "IsGrounded";
+    [SerializeField] private string isWalkingParam = "IsWalking";
+    [SerializeField] private string isRunningParam = "IsRunning";
+    [SerializeField] private string interactTrigger = "Interact";
+    [SerializeField] private string punchTrigger = "Punch";
+    [SerializeField] private string inspectTrigger = "Inspect";
+
     [Header("Animation Settings")]
-    public float animationSmoothing = 5f;
-    public float idleThreshold = 0.1f;
+    public float animationSmoothTime = 0.1f;
 
-    [Header("References")]
-    public FirstPersonController playerController;
+    [Header("Action Cooldowns")]
+    public float interactCooldown = 1f;
+    public float punchCooldown = 0.5f;
+    public float inspectCooldown = 1.5f;
 
-    // Animator component
+    // Components
     private Animator animator;
 
-    // Animation parameter hashes (more efficient than strings)
+    // Animation state
+    private float currentMoveSpeed;
+    private bool currentIsGrounded;
+    private bool currentIsWalking;
+    private bool currentIsRunning;
+
+    // Cooldown timers
+    private float lastInteractTime;
+    private float lastPunchTime;
+    private float lastInspectTime;
+
+    // Hash IDs for performance
+    private int moveSpeedHash;
+    private int isGroundedHash;
     private int isWalkingHash;
     private int isRunningHash;
-    private int isIdleHash;
     private int interactHash;
     private int punchHash;
     private int inspectHash;
-    private int speedHash;
-
-    // Animation states
-    private bool isWalking;
-    private bool isRunning;
-    private bool isIdle;
-
-    // Timers for one-shot animations
-    private float interactTimer;
-    private float punchTimer;
-    private float inspectTimer;
 
     void Start()
     {
-        // Get components
         animator = GetComponent<Animator>();
 
-        if (playerController == null)
-            playerController = GetComponentInParent<FirstPersonController>();
+        // Cache animator parameter hash IDs
+        moveSpeedHash = Animator.StringToHash(moveSpeedParam);
+        isGroundedHash = Animator.StringToHash(isGroundedParam);
+        isWalkingHash = Animator.StringToHash(isWalkingParam);
+        isRunningHash = Animator.StringToHash(isRunningParam);
+        interactHash = Animator.StringToHash(interactTrigger);
+        punchHash = Animator.StringToHash(punchTrigger);
+        inspectHash = Animator.StringToHash(inspectTrigger);
 
-        // Cache animation parameter hashes
-        isWalkingHash = Animator.StringToHash("IsWalking");
-        isRunningHash = Animator.StringToHash("IsRunning");
-        isIdleHash = Animator.StringToHash("IsIdle");
-        interactHash = Animator.StringToHash("Interact");
-        punchHash = Animator.StringToHash("Punch");
-        inspectHash = Animator.StringToHash("Inspect");
-        speedHash = Animator.StringToHash("Speed");
-
-        // Subscribe to controller events
-        if (playerController != null)
-        {
-            playerController.OnMovingChanged += OnMovingChanged;
-            playerController.OnRunningChanged += OnRunningChanged;
-            playerController.OnInteract += OnInteract;
-            playerController.OnPunch += OnPunch;
-            playerController.OnInspect += OnInspect;
-        }
-
-        // Start in idle state
-        SetIdleState(true);
+        // Validate animator parameters
+        ValidateAnimatorParameters();
     }
 
-    void OnDestroy()
+    void ValidateAnimatorParameters()
     {
-        // Unsubscribe from events
-        if (playerController != null)
+        if (animator == null) return;
+
+        // Check if all required parameters exist in the animator
+        AnimatorControllerParameter[] parameters = animator.parameters;
+
+        bool hasMove = false, hasGrounded = false, hasWalking = false, hasRunning = false;
+        bool hasInteract = false, hasPunch = false, hasInspect = false;
+
+        foreach (var param in parameters)
         {
-            playerController.OnMovingChanged -= OnMovingChanged;
-            playerController.OnRunningChanged -= OnRunningChanged;
-            playerController.OnInteract -= OnInteract;
-            playerController.OnPunch -= OnPunch;
-            playerController.OnInspect -= OnInspect;
+            switch (param.name)
+            {
+                case var name when name == moveSpeedParam:
+                    hasMove = true;
+                    break;
+                case var name when name == isGroundedParam:
+                    hasGrounded = true;
+                    break;
+                case var name when name == isWalkingParam:
+                    hasWalking = true;
+                    break;
+                case var name when name == isRunningParam:
+                    hasRunning = true;
+                    break;
+                case var name when name == interactTrigger:
+                    hasInteract = true;
+                    break;
+                case var name when name == punchTrigger:
+                    hasPunch = true;
+                    break;
+                case var name when name == inspectTrigger:
+                    hasInspect = true;
+                    break;
+            }
         }
+
+        // Log warnings for missing parameters
+        if (!hasMove) Debug.LogWarning($"Animator parameter '{moveSpeedParam}' not found!");
+        if (!hasGrounded) Debug.LogWarning($"Animator parameter '{isGroundedParam}' not found!");
+        if (!hasWalking) Debug.LogWarning($"Animator parameter '{isWalkingParam}' not found!");
+        if (!hasRunning) Debug.LogWarning($"Animator parameter '{isRunningParam}' not found!");
+        if (!hasInteract) Debug.LogWarning($"Animator trigger '{interactTrigger}' not found!");
+        if (!hasPunch) Debug.LogWarning($"Animator trigger '{punchTrigger}' not found!");
+        if (!hasInspect) Debug.LogWarning($"Animator trigger '{inspectTrigger}' not found!");
     }
 
-    void Update()
+    public void SetMovementData(float inputMagnitude, bool isWalking, bool isRunning, bool isGrounded)
     {
-        if (playerController == null) return;
+        if (animator == null) return;
 
-        UpdateMovementAnimations();
-        UpdateTimers();
+        // Smooth movement speed changes
+        currentMoveSpeed = Mathf.Lerp(currentMoveSpeed, inputMagnitude,
+            Time.deltaTime / animationSmoothTime);
+
+        // Set animation parameters
+        animator.SetFloat(moveSpeedHash, currentMoveSpeed);
+        animator.SetBool(isGroundedHash, isGrounded);
+        animator.SetBool(isWalkingHash, isWalking);
+        animator.SetBool(isRunningHash, isRunning);
+
+        // Update current states
+        currentIsGrounded = isGrounded;
+        currentIsWalking = isWalking;
+        currentIsRunning = isRunning;
     }
 
-    void UpdateMovementAnimations()
+    public void TriggerInteract()
     {
-        float speed = playerController.MovementSpeed;
-        bool isMoving = playerController.IsMoving;
-        bool isRunningNow = playerController.IsRunning;
-
-        // Smooth speed parameter
-        animator.SetFloat(speedHash, speed, animationSmoothing * Time.deltaTime, Time.deltaTime);
-
-        // Determine animation state based on movement
-        if (!isMoving || speed < idleThreshold)
+        if (CanPerformAction(lastInteractTime, interactCooldown))
         {
-            // Idle state
-            SetIdleState(true);
-            SetWalkingState(false);
-            SetRunningState(false);
-        }
-        else if (isRunningNow)
-        {
-            // Running state
-            SetIdleState(false);
-            SetWalkingState(false);
-            SetRunningState(true);
-        }
-        else
-        {
-            // Walking state
-            SetIdleState(false);
-            SetWalkingState(true);
-            SetRunningState(false);
-        }
-    }
-
-    void UpdateTimers()
-    {
-        // Update timers for one-shot animations
-        if (interactTimer > 0)
-            interactTimer -= Time.deltaTime;
-
-        if (punchTimer > 0)
-            punchTimer -= Time.deltaTime;
-
-        if (inspectTimer > 0)
-            inspectTimer -= Time.deltaTime;
-    }
-
-    void SetIdleState(bool state)
-    {
-        if (isIdle != state)
-        {
-            isIdle = state;
-            animator.SetBool(isIdleHash, state);
+            animator.SetTrigger(interactHash);
+            lastInteractTime = Time.time;
+            Debug.Log("Interact animation triggered");
         }
     }
 
-    void SetWalkingState(bool state)
+    public void TriggerPunch()
     {
-        if (isWalking != state)
-        {
-            isWalking = state;
-            animator.SetBool(isWalkingHash, state);
-        }
-    }
-
-    void SetRunningState(bool state)
-    {
-        if (isRunning != state)
-        {
-            isRunning = state;
-            animator.SetBool(isRunningHash, state);
-        }
-    }
-
-    // Event handlers
-    void OnMovingChanged(bool moving)
-    {
-        // This will be handled in UpdateMovementAnimations
-        // but you can add additional logic here if needed
-    }
-
-    void OnRunningChanged(bool running)
-    {
-        // This will be handled in UpdateMovementAnimations
-        // but you can add additional logic here if needed
-    }
-
-    void OnInteract()
-    {
-        animator.SetTrigger(interactHash);
-        interactTimer = 1f; // Duration to prevent rapid triggering
-    }
-
-    void OnPunch()
-    {
-        if (punchTimer <= 0) // Prevent rapid fire punching
+        if (CanPerformAction(lastPunchTime, punchCooldown))
         {
             animator.SetTrigger(punchHash);
-            punchTimer = 0.5f; // Cooldown time
+            lastPunchTime = Time.time;
+            Debug.Log("Punch animation triggered");
         }
     }
 
-    void OnInspect()
+    public void TriggerInspect()
     {
-        animator.SetTrigger(inspectHash);
-        inspectTimer = 1f; // Duration to prevent rapid triggering
-    }
-
-    // Public methods for manual animation control
-    public void PlayInteractAnimation()
-    {
-        OnInteract();
-    }
-
-    public void PlayPunchAnimation()
-    {
-        OnPunch();
-    }
-
-    public void PlayInspectAnimation()
-    {
-        OnInspect();
-    }
-
-    // Method to force specific animation states (useful for debugging)
-    public void ForceAnimationState(string stateName)
-    {
-        switch (stateName.ToLower())
+        if (CanPerformAction(lastInspectTime, inspectCooldown))
         {
-            case "idle":
-                SetIdleState(true);
-                SetWalkingState(false);
-                SetRunningState(false);
-                break;
-            case "walk":
-                SetIdleState(false);
-                SetWalkingState(true);
-                SetRunningState(false);
-                break;
-            case "run":
-                SetIdleState(false);
-                SetWalkingState(false);
-                SetRunningState(true);
-                break;
+            animator.SetTrigger(inspectHash);
+            lastInspectTime = Time.time;
+            Debug.Log("Inspect animation triggered");
         }
     }
 
-    // Get current animation info
-    public bool IsPlayingAnimation(string animationName)
+    private bool CanPerformAction(float lastActionTime, float cooldown)
     {
-        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-        return stateInfo.IsName(animationName);
+        return Time.time - lastActionTime >= cooldown;
     }
 
-    public float GetCurrentAnimationTime()
+    // Public getters for external scripts
+    public float GetCurrentMoveSpeed() => currentMoveSpeed;
+    public bool IsCurrentlyGrounded() => currentIsGrounded;
+    public bool IsCurrentlyWalking() => currentIsWalking;
+    public bool IsCurrentlyRunning() => currentIsRunning;
+
+    // Animation Events - Call these from animation events in the Animator
+    public void OnInteractAnimationStart()
     {
-        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-        return stateInfo.normalizedTime;
+        Debug.Log("Interact animation started");
+        // Add logic for when interact animation starts
+    }
+
+    public void OnInteractAnimationEnd()
+    {
+        Debug.Log("Interact animation ended");
+        // Add logic for when interact animation ends
+    }
+
+    public void OnPunchAnimationHit()
+    {
+        Debug.Log("Punch hit frame");
+        // Add logic for punch hit detection
+        // This is typically called at the frame where the punch should deal damage
+    }
+
+    public void OnPunchAnimationEnd()
+    {
+        Debug.Log("Punch animation ended");
+        // Add logic for when punch animation ends
+    }
+
+    public void OnInspectAnimationStart()
+    {
+        Debug.Log("Inspect animation started");
+        // Add logic for when inspect animation starts
+    }
+
+    public void OnInspectAnimationEnd()
+    {
+        Debug.Log("Inspect animation ended");
+        // Add logic for when inspect animation ends
+    }
+
+    // Manual animation control methods
+    public void SetAnimationSpeed(float speed)
+    {
+        if (animator != null)
+        {
+            animator.speed = speed;
+        }
+    }
+
+    public void PauseAnimation()
+    {
+        if (animator != null)
+        {
+            animator.speed = 0f;
+        }
+    }
+
+    public void ResumeAnimation()
+    {
+        if (animator != null)
+        {
+            animator.speed = 1f;
+        }
+    }
+
+    // Get current animation state info
+    public AnimatorStateInfo GetCurrentStateInfo(int layerIndex = 0)
+    {
+        return animator != null ? animator.GetCurrentAnimatorStateInfo(layerIndex) : new AnimatorStateInfo();
+    }
+
+    public bool IsAnimationPlaying(string stateName, int layerIndex = 0)
+    {
+        if (animator == null) return false;
+        return animator.GetCurrentAnimatorStateInfo(layerIndex).IsName(stateName);
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        // Visual feedback in scene view
+        if (Application.isPlaying)
+        {
+            Gizmos.color = currentIsGrounded ? Color.green : Color.red;
+            Gizmos.DrawWireSphere(transform.position, 0.1f);
+
+            if (currentMoveSpeed > 0.1f)
+            {
+                Gizmos.color = currentIsRunning ? Color.yellow : (currentIsWalking ? Color.blue : Color.gray);
+                Gizmos.DrawLine(transform.position,
+                    transform.position + transform.forward * currentMoveSpeed);
+            }
+        }
     }
 }

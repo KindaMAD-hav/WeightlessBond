@@ -1,267 +1,227 @@
 using UnityEngine;
 
-public class FirstPersonCameraController : MonoBehaviour
+public class FirstPersonCamera : MonoBehaviour
 {
-    [Header("Camera Settings")]
+    [Header("Mouse Sensitivity")]
     public float mouseSensitivity = 100f;
-    public float maxLookAngle = 80f;
-    public float minLookAngle = -80f;
+    public float verticalSensitivity = 100f;
+    public float horizontalSensitivity = 100f;
+
+    [Header("Camera Limits")]
+    public float minVerticalAngle = -90f;
+    public float maxVerticalAngle = 90f;
 
     [Header("Camera Effects")]
     public bool enableHeadBob = true;
-    public float bobAmount = 0.05f;
-    public float bobSpeed = 14f;
-    public bool enableCameraSway = true;
-    public float swayAmount = 0.02f;
-    public float swaySpeed = 2f;
+    public float bobFrequency = 2f;
+    public float bobAmplitude = 0.05f;
+    public float bobSmoothing = 5f;
 
-    [Header("Field of View")]
+    [Header("Camera Sway")]
+    public bool enableSway = true;
+    public float swayAmount = 0.02f;
+    public float swaySmoothing = 4f;
+
+    [Header("FOV Settings")]
     public float normalFOV = 60f;
     public float runningFOV = 70f;
     public float fovTransitionSpeed = 2f;
 
-    [Header("Camera Shake")]
-    public bool enableCameraShake = true;
-    public float shakeDecay = 5f;
+    // References
+    private Transform playerBody;
+    private FirstPersonController playerController;
+    private Camera cam;
 
-    [Header("References")]
-    public FirstPersonController playerController;
-    public Transform cameraHolder; // Parent transform for camera positioning
-
-    // Private variables
-    private Camera playerCamera;
+    // Rotation variables
     private float xRotation = 0f;
-    private Vector3 originalCameraPosition;
+    private float mouseX;
+    private float mouseY;
 
     // Head bob variables
+    private Vector3 originalCameraPosition;
     private float bobTimer = 0f;
+    private bool wasMoving = false;
 
     // Camera sway variables
-    private float swayTimer = 0f;
-
-    // Camera shake variables
-    private Vector3 shakeOffset = Vector3.zero;
-    private float shakeIntensity = 0f;
+    private Vector3 swayPosition;
 
     // FOV variables
     private float targetFOV;
 
-    // Smoothing variables
-    private Vector2 currentMouseDelta;
-    private Vector2 currentMouseDeltaVelocity;
-    public float mouseSmoothTime = 0.03f;
-
     void Start()
     {
-        // Get components
-        playerCamera = GetComponent<Camera>();
+        // Get references
+        playerBody = transform.parent; // PlayerCameraHolder
+        if (playerBody != null)
+        {
+            playerController = playerBody.parent.GetComponent<FirstPersonController>(); // Player
+        }
+        cam = GetComponent<Camera>();
 
-        if (playerController == null)
-            playerController = GetComponentInParent<FirstPersonController>();
-
-        if (cameraHolder == null)
-            cameraHolder = transform.parent;
-
-        // Store original position
+        // Store original camera position for head bob
         originalCameraPosition = transform.localPosition;
-
-        // Initialize FOV
         targetFOV = normalFOV;
-        playerCamera.fieldOfView = normalFOV;
 
-        // Lock cursor
+        // Ensure cursor is locked
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update()
     {
-        HandleMouseLook();
-        HandleCameraEffects();
-        HandleFOVChanges();
-        ApplyCameraPosition();
+        HandleMouseInput();
+        HandleCameraRotation();
+        HandleHeadBob();
+        HandleCameraSway();
+        HandleFOVChange();
+        HandleCursorToggle();
     }
 
-    void HandleMouseLook()
+    void HandleMouseInput()
     {
-        // Get mouse input
-        Vector2 targetMouseDelta = new Vector2(
-            Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime,
-            Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime
-        );
+        mouseX = Input.GetAxis("Mouse X") * horizontalSensitivity * Time.deltaTime;
+        mouseY = Input.GetAxis("Mouse Y") * verticalSensitivity * Time.deltaTime;
+    }
 
-        // Smooth mouse movement
-        currentMouseDelta = Vector2.SmoothDamp(currentMouseDelta, targetMouseDelta,
-            ref currentMouseDeltaVelocity, mouseSmoothTime);
-
-        // Apply horizontal rotation to player body (if we have a player controller)
-        if (playerController != null)
+    void HandleCameraRotation()
+    {
+        // Rotate player body horizontally
+        if (playerBody != null)
         {
-            playerController.transform.Rotate(Vector3.up * currentMouseDelta.x);
-        }
-        else if (cameraHolder != null)
-        {
-            cameraHolder.Rotate(Vector3.up * currentMouseDelta.x);
+            playerBody.Rotate(Vector3.up * mouseX);
         }
 
-        // Apply vertical rotation to camera
-        xRotation -= currentMouseDelta.y;
-        xRotation = Mathf.Clamp(xRotation, minLookAngle, maxLookAngle);
+        // Rotate camera vertically
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, minVerticalAngle, maxVerticalAngle);
+
         transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
-    void HandleCameraEffects()
+    void HandleHeadBob()
     {
-        if (playerController == null) return;
+        if (!enableHeadBob || playerController == null) return;
 
-        Vector3 newPosition = originalCameraPosition;
+        bool isMoving = (playerController.IsWalking() || playerController.IsRunning()) && playerController.IsGrounded();
 
-        // Head bob effect
-        if (enableHeadBob && playerController.IsMoving && playerController.IsGrounded)
+        if (isMoving)
         {
-            bobTimer += Time.deltaTime * bobSpeed;
-            float bobOffset = Mathf.Sin(bobTimer) * bobAmount;
-            float bobOffsetX = Mathf.Cos(bobTimer * 0.5f) * bobAmount * 0.5f;
+            // Calculate bob
+            float speedMultiplier = playerController.IsRunning() ? 1.5f : 1f;
+            bobTimer += Time.deltaTime * bobFrequency * speedMultiplier;
 
-            newPosition.y += bobOffset;
-            newPosition.x += bobOffsetX;
+            float bobX = Mathf.Sin(bobTimer) * bobAmplitude * 0.5f;
+            float bobY = Mathf.Sin(bobTimer * 2) * bobAmplitude;
+
+            Vector3 bobOffset = new Vector3(bobX, bobY, 0);
+            Vector3 targetPosition = originalCameraPosition + bobOffset;
+
+            transform.localPosition = Vector3.Lerp(transform.localPosition, targetPosition,
+                bobSmoothing * Time.deltaTime);
+
+            wasMoving = true;
+        }
+        else if (wasMoving)
+        {
+            // Return to original position smoothly
+            transform.localPosition = Vector3.Lerp(transform.localPosition, originalCameraPosition,
+                bobSmoothing * Time.deltaTime);
+
+            if (Vector3.Distance(transform.localPosition, originalCameraPosition) < 0.01f)
+            {
+                transform.localPosition = originalCameraPosition;
+                bobTimer = 0f;
+                wasMoving = false;
+            }
+        }
+    }
+
+    void HandleCameraSway()
+    {
+        if (!enableSway) return;
+
+        // Calculate sway based on mouse movement
+        Vector3 targetSway = new Vector3(-mouseY * swayAmount, mouseX * swayAmount, 0);
+        swayPosition = Vector3.Lerp(swayPosition, targetSway, swaySmoothing * Time.deltaTime);
+
+        // Apply sway to camera position (additive to head bob)
+        Vector3 finalPosition = transform.localPosition + swayPosition;
+
+        if (!enableHeadBob || playerController == null || (!playerController.IsWalking() && !playerController.IsRunning()))
+        {
+            transform.localPosition = Vector3.Lerp(transform.localPosition,
+                originalCameraPosition + swayPosition, swaySmoothing * Time.deltaTime);
+        }
+    }
+
+    void HandleFOVChange()
+    {
+        if (cam == null || playerController == null) return;
+
+        // Change FOV based on running state
+        targetFOV = playerController.IsRunning() ? runningFOV : normalFOV;
+
+        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFOV, fovTransitionSpeed * Time.deltaTime);
+    }
+
+    void HandleCursorToggle()
+    {
+        // Toggle cursor with Escape key
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            ToggleCursor();
+        }
+    }
+
+    public void ToggleCursor()
+    {
+        if (Cursor.lockState == CursorLockMode.Locked)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
         else
         {
-            bobTimer = 0f;
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
-
-        // Camera sway effect
-        if (enableCameraSway)
-        {
-            swayTimer += Time.deltaTime * swaySpeed;
-            float swayX = Mathf.Sin(swayTimer) * swayAmount;
-            float swayY = Mathf.Cos(swayTimer * 1.2f) * swayAmount * 0.5f;
-
-            newPosition.x += swayX;
-            newPosition.y += swayY;
-        }
-
-        // Apply camera shake
-        if (enableCameraShake && shakeIntensity > 0)
-        {
-            shakeOffset = Random.insideUnitSphere * shakeIntensity;
-            shakeIntensity = Mathf.MoveTowards(shakeIntensity, 0, shakeDecay * Time.deltaTime);
-            newPosition += shakeOffset;
-        }
-
-        transform.localPosition = newPosition;
     }
 
-    void HandleFOVChanges()
-    {
-        if (playerController == null) return;
-
-        // Change FOV based on running state
-        targetFOV = playerController.IsRunning ? runningFOV : normalFOV;
-
-        // Smoothly transition FOV
-        playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, targetFOV,
-            fovTransitionSpeed * Time.deltaTime);
-    }
-
-    void ApplyCameraPosition()
-    {
-        // This method can be used for additional position adjustments
-        // Currently handled in HandleCameraEffects, but kept for extensibility
-    }
-
-    // Public methods for external control
     public void SetSensitivity(float sensitivity)
     {
         mouseSensitivity = sensitivity;
+        horizontalSensitivity = sensitivity;
+        verticalSensitivity = sensitivity;
     }
 
-    public void SetFOV(float fov)
+    public void SetMouseSensitivity(float horizontal, float vertical)
     {
-        targetFOV = fov;
+        horizontalSensitivity = horizontal;
+        verticalSensitivity = vertical;
     }
 
-    public void AddCameraShake(float intensity)
-    {
-        shakeIntensity = Mathf.Max(shakeIntensity, intensity);
-    }
-
+    // Public methods for external camera control
     public void AddCameraShake(float intensity, float duration)
     {
-        StartCoroutine(ShakeCoroutine(intensity, duration));
+        StartCoroutine(CameraShake(intensity, duration));
     }
 
-    private System.Collections.IEnumerator ShakeCoroutine(float intensity, float duration)
+    private System.Collections.IEnumerator CameraShake(float intensity, float duration)
     {
-        shakeIntensity = intensity;
-        yield return new WaitForSeconds(duration);
-        shakeIntensity = 0f;
-    }
+        Vector3 originalPos = transform.localPosition;
+        float elapsed = 0f;
 
-    // Toggle camera effects
-    public void ToggleHeadBob(bool enabled)
-    {
-        enableHeadBob = enabled;
-        if (!enabled)
+        while (elapsed < duration)
         {
-            bobTimer = 0f;
+            float x = Random.Range(-1f, 1f) * intensity;
+            float y = Random.Range(-1f, 1f) * intensity;
+
+            transform.localPosition = originalPos + new Vector3(x, y, 0);
+
+            elapsed += Time.deltaTime;
+            yield return null;
         }
-    }
 
-    public void ToggleCameraSway(bool enabled)
-    {
-        enableCameraSway = enabled;
-        if (!enabled)
-        {
-            swayTimer = 0f;
-        }
-    }
-
-    // Cursor control methods
-    public void LockCursor()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-    }
-
-    public void UnlockCursor()
-    {
-        Cursor.lockState = CursorLockMode.None;
-    }
-
-    // Reset camera to default state
-    public void ResetCamera()
-    {
-        xRotation = 0f;
-        transform.localRotation = Quaternion.identity;
-        transform.localPosition = originalCameraPosition;
-        playerCamera.fieldOfView = normalFOV;
-        shakeIntensity = 0f;
-        bobTimer = 0f;
-        swayTimer = 0f;
-    }
-
-    // Get camera information
-    public Vector3 GetCameraDirection()
-    {
-        return transform.forward;
-    }
-
-    public Ray GetCameraRay()
-    {
-        return new Ray(transform.position, transform.forward);
-    }
-
-    public Vector3 GetCameraPosition()
-    {
-        return transform.position;
-    }
-
-    void OnValidate()
-    {
-        // Ensure min/max look angles are valid
-        if (minLookAngle > maxLookAngle)
-        {
-            minLookAngle = maxLookAngle;
-        }
+        transform.localPosition = originalPos;
     }
 }

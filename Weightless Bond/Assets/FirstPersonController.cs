@@ -1,154 +1,133 @@
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(AudioSource))]
 public class FirstPersonController : MonoBehaviour
 {
     [Header("Movement Settings")]
-    public float walkSpeed = 5f;
-    public float runSpeed = 10f;
-    public float jumpHeight = 2f;
-    public float gravity = -9.81f;
-    public float groundDistance = 0.4f;
+    public float walkSpeed = 3f;
+    public float runSpeed = 6f;
+    public float jumpHeight = 1.5f;
+    public float gravity = -20f;
+    public float groundCheckDistance = 0.3f;
 
-    [Header("Camera Settings")]
-    public Camera playerCamera;
-    public FirstPersonCameraController cameraController;
+    [Header("Movement States")]
+    public float walkThreshold = 0.1f; // Minimum input to start walking
 
-    [Header("Ground Check")]
-    public Transform groundCheck;
-    public LayerMask groundMask;
-
-    [Header("Interaction")]
-    public float interactionRange = 3f;
-    public LayerMask interactionMask;
+    [Header("Input Settings")]
+    public KeyCode runKey = KeyCode.LeftShift;
+    public KeyCode jumpKey = KeyCode.Space;
     public KeyCode interactKey = KeyCode.E;
     public KeyCode punchKey = KeyCode.Mouse0;
     public KeyCode inspectKey = KeyCode.F;
 
-    // Private variables
+    [Header("Ground Check")]
+    public Transform groundCheck;
+    public LayerMask groundMask = 1;
+
+    [Header("Audio")]
+    public AudioClip[] footstepSounds;
+    public float footstepInterval = 0.5f;
+
+    // Components
     private CharacterController controller;
+    private AudioSource audioSource;
+    private PlayerAnimationController animationController;
+
+    // Movement variables
     private Vector3 velocity;
     private bool isGrounded;
     private bool isRunning;
-    private bool isMoving;
+    private bool isWalking;
+    private float currentSpeed;
+    private float inputMagnitude;
+
+    // Audio variables
+    private float footstepTimer;
 
     // Input variables
     private float horizontal;
     private float vertical;
-    private bool jumpPressed;
-    private bool runPressed;
-    private bool interactPressed;
-    private bool punchPressed;
-    private bool inspectPressed;
-
-    // Events for animation system
-    public System.Action<bool> OnMovingChanged;
-    public System.Action<bool> OnRunningChanged;
-    public System.Action OnJump;
-    public System.Action OnInteract;
-    public System.Action OnPunch;
-    public System.Action OnInspect;
-
-    // Properties for animation system
-    public bool IsMoving => isMoving;
-    public bool IsRunning => isRunning;
-    public bool IsGrounded => isGrounded;
-    public float MovementSpeed => new Vector3(controller.velocity.x, 0, controller.velocity.z).magnitude;
+    private Vector3 moveDirection;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        audioSource = GetComponent<AudioSource>();
+        animationController = GetComponentInChildren<PlayerAnimationController>();
 
-        // Lock cursor to center of screen
+        // Lock and hide cursor
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
-        // If no camera assigned, try to find one
-        if (playerCamera == null)
-            playerCamera = GetComponentInChildren<Camera>();
-
-        // Get camera controller
-        if (cameraController == null && playerCamera != null)
-            cameraController = playerCamera.GetComponent<FirstPersonCameraController>();
-
-        // If no ground check transform, create one
-        if (groundCheck == null)
-        {
-            GameObject groundCheckObj = new GameObject("GroundCheck");
-            groundCheckObj.transform.SetParent(transform);
-            groundCheckObj.transform.localPosition = new Vector3(0, -1f, 0);
-            groundCheck = groundCheckObj.transform;
-        }
+        currentSpeed = walkSpeed;
     }
 
     void Update()
     {
         HandleInput();
         HandleMovement();
-        HandleGroundCheck();
-        HandleInteraction();
+        HandleActions();
+        HandleAudio();
+
+        // Send movement data to animation controller
+        if (animationController != null)
+        {
+            animationController.SetMovementData(inputMagnitude, isWalking, isRunning, isGrounded);
+        }
     }
 
     void HandleInput()
     {
-        // Movement input
         horizontal = Input.GetAxis("Horizontal");
         vertical = Input.GetAxis("Vertical");
 
-        // Jump input
-        jumpPressed = Input.GetButtonDown("Jump");
+        // Calculate input magnitude for movement states
+        Vector2 inputVector = new Vector2(horizontal, vertical);
+        inputMagnitude = Mathf.Clamp01(inputVector.magnitude);
 
-        // Run input
-        runPressed = Input.GetKey(KeyCode.LeftShift);
+        // Determine movement states
+        isRunning = Input.GetKey(runKey) && inputMagnitude > walkThreshold;
+        isWalking = !isRunning && inputMagnitude > walkThreshold;
 
-        // Action inputs
-        interactPressed = Input.GetKeyDown(interactKey);
-        punchPressed = Input.GetKeyDown(punchKey);
-        inspectPressed = Input.GetKeyDown(inspectKey);
-    }
-
-    void HandleMouseLook()
-    {
-        // Mouse look is now handled by FirstPersonCameraController
-        // This method is kept for backward compatibility but does nothing
+        // Set current speed based on state
+        if (isRunning)
+            currentSpeed = runSpeed;
+        else if (isWalking)
+            currentSpeed = walkSpeed;
+        else
+            currentSpeed = 0f;
     }
 
     void HandleMovement()
     {
         // Ground check
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask);
 
         if (isGrounded && velocity.y < 0)
         {
             velocity.y = -2f; // Small negative value to keep grounded
         }
 
-        // Get movement direction
-        Vector3 move = transform.right * horizontal + transform.forward * vertical;
+        // Movement
+        moveDirection = transform.right * horizontal + transform.forward * vertical;
 
-        // Determine if moving - check both input AND actual velocity
-        bool wasMoving = isMoving;
-        isMoving = (move.magnitude > 0.1f) || (controller.velocity.magnitude > 0.5f);
+        // Only apply speed if we have input above threshold
+        if (inputMagnitude > walkThreshold)
+        {
+            moveDirection = moveDirection.normalized * currentSpeed;
+        }
+        else
+        {
+            moveDirection = Vector3.zero;
+        }
 
-        if (wasMoving != isMoving)
-            OnMovingChanged?.Invoke(isMoving);
+        controller.Move(moveDirection * Time.deltaTime);
 
-        // Determine movement speed
-        bool wasRunning = isRunning;
-        isRunning = isMoving && runPressed;
-
-        if (wasRunning != isRunning)
-            OnRunningChanged?.Invoke(isRunning);
-
-        float currentSpeed = isRunning ? runSpeed : walkSpeed;
-
-        // Apply movement
-        controller.Move(move * currentSpeed * Time.deltaTime);
-
-        // Handle jumping
-        if (jumpPressed && isGrounded)
+        // Jumping
+        if (Input.GetKeyDown(jumpKey) && isGrounded)
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-            OnJump?.Invoke();
         }
 
         // Apply gravity
@@ -156,83 +135,100 @@ public class FirstPersonController : MonoBehaviour
         controller.Move(velocity * Time.deltaTime);
     }
 
-    void HandleGroundCheck()
+    void HandleActions()
     {
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-    }
-
-    void HandleInteraction()
-    {
-        // Handle interact
-        if (interactPressed)
+        if (Input.GetKeyDown(interactKey))
         {
-            PerformInteraction();
+            PerformInteract();
         }
 
-        // Handle punch
-        if (punchPressed)
+        if (Input.GetKeyDown(punchKey))
         {
-            OnPunch?.Invoke();
+            PerformPunch();
         }
 
-        // Handle inspect
-        if (inspectPressed)
+        if (Input.GetKeyDown(inspectKey))
         {
-            OnInspect?.Invoke();
+            PerformInspect();
         }
     }
 
-    void PerformInteraction()
+    void HandleAudio()
     {
-        RaycastHit hit;
-        Vector3 rayOrigin = playerCamera.transform.position;
-        Vector3 rayDirection = playerCamera.transform.forward;
-
-        if (Physics.Raycast(rayOrigin, rayDirection, out hit, interactionRange, interactionMask))
+        if (isGrounded && (isWalking || isRunning))
         {
-            // Remove gravity from the hit object
-            Rigidbody rb = hit.collider.GetComponent<Rigidbody>();
-            if (rb != null)
+            footstepTimer += Time.deltaTime;
+
+            float currentFootstepInterval = isRunning ? footstepInterval * 0.6f : footstepInterval;
+
+            if (footstepTimer >= currentFootstepInterval)
             {
-                rb.useGravity = false;
-                rb.linearDamping = 2f; // Optional: add some drag to make it float more naturally
-                OnInteract?.Invoke(); // Trigger interact animation
-
-                Debug.Log($"Removed gravity from {hit.collider.name}");
+                PlayFootstepSound();
+                footstepTimer = 0f;
             }
-        }
-    }
-
-    // Method to enable/disable cursor lock (delegates to camera controller)
-    public void SetCursorLock(bool locked)
-    {
-        if (cameraController != null)
-        {
-            if (locked) cameraController.LockCursor();
-            else cameraController.UnlockCursor();
         }
         else
         {
-            Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
+            footstepTimer = 0f;
         }
     }
+
+    void PlayFootstepSound()
+    {
+        if (footstepSounds.Length > 0 && audioSource != null)
+        {
+            AudioClip clip = footstepSounds[Random.Range(0, footstepSounds.Length)];
+            audioSource.PlayOneShot(clip, 0.7f);
+        }
+    }
+
+    void PerformInteract()
+    {
+        if (animationController != null)
+        {
+            animationController.TriggerInteract();
+        }
+
+        // Add your interaction logic here
+        Debug.Log("Interact performed");
+    }
+
+    void PerformPunch()
+    {
+        if (animationController != null)
+        {
+            animationController.TriggerPunch();
+        }
+
+        // Add your punch logic here
+        Debug.Log("Punch performed");
+    }
+
+    void PerformInspect()
+    {
+        if (animationController != null)
+        {
+            animationController.TriggerInspect();
+        }
+
+        // Add your inspect logic here
+        Debug.Log("Inspect performed");
+    }
+
+    // Public methods for external access
+    public bool IsGrounded() => isGrounded;
+    public bool IsRunning() => isRunning;
+    public bool IsWalking() => isWalking;
+    public float GetInputMagnitude() => inputMagnitude;
+    public float GetMovementSpeed() => currentSpeed;
+    public Vector3 GetVelocity() => controller.velocity;
 
     void OnDrawGizmosSelected()
     {
-        // Draw ground check sphere
         if (groundCheck != null)
         {
             Gizmos.color = isGrounded ? Color.green : Color.red;
-            Gizmos.DrawWireSphere(groundCheck.position, groundDistance);
-        }
-
-        // Draw interaction range
-        if (playerCamera != null)
-        {
-            Gizmos.color = Color.blue;
-            Gizmos.DrawRay(playerCamera.transform.position, playerCamera.transform.forward * interactionRange);
+            Gizmos.DrawWireSphere(groundCheck.position, groundCheckDistance);
         }
     }
 }
-
-// You can add additional power-related methods here if needed
