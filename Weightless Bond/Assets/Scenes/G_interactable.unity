@@ -369,6 +369,7 @@ GameObject:
   - component: {fileID: 383160850}
   - component: {fileID: 383160849}
   - component: {fileID: 383160848}
+  - component: {fileID: 383160851}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -544,6 +545,71 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &383160851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 383160846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 980b653e79a4e7344b5782e04c4c0102, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GravityHand
+  cam: {fileID: 1766348430}
+  holdPoint: {fileID: 726244109}
+  interactableMask:
+    serializedVersion: 2
+    m_Bits: 64
+  maxRayDistance: 12
+  aimRadiusDegrees: 3
+  holdDistance: 3
+  minHoldDistance: 1
+  maxHoldDistance: 10
+  positionStrength: 600
+  velocityDamping: 50
+  angularStrength: 50
+  maxLinearSpeed: 20
+  maxForce: 2000
+  throwForce: 20
+  pickKey: 101
+  dropKey: 113
+  throwKey: 324
+  rotateHoldKey: 114
+  mouseRotateSpeed: 6
+  scrollDistanceStep: 0.5
+--- !u!1 &726244108
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 726244109}
+  m_Layer: 0
+  m_Name: HoldPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &726244109
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 726244108}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.422, z: 3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1766348431}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &998664279
 GameObject:
   m_ObjectHideFlags: 0
@@ -660,6 +726,7 @@ GameObject:
   - component: {fileID: 1245700071}
   - component: {fileID: 1245700076}
   - component: {fileID: 1245700075}
+  - component: {fileID: 1245700077}
   m_Layer: 6
   m_Name: G_test
   m_TagString: Interactable
@@ -773,9 +840,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Highlighter
   renderers:
   - {fileID: 1245700072}
-  emissionColorName: _EmissionColor
   onColor: {r: 1, g: 0.016587388, b: 0, a: 2}
   fadeSpeed: 12
+  debugHighlight: 0
+  emissionColorName: _EmissionColor
 --- !u!54 &1245700076
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -803,6 +871,22 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1245700077
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1245700070}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e0a7977b5ee025408509a60c83182f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::G_Interactable
+  allowRotation: 1
+  maxPickupDistance: 8
+  maxHoldDistance: 12
+  massClamp: 50
 --- !u!1001 &1564643972
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1181,6 +1265,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1564643973}
+  - {fileID: 726244109}
   m_Father: {fileID: 383160847}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1766348432
