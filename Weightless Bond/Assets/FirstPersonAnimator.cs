@@ -15,17 +15,10 @@ public class PlayerAnimationController : MonoBehaviour
     [Header("Animation Settings")]
     public float animationSmoothTime = 0.1f;
 
-    [Header("Auto-Reset Settings")]
-    public bool autoResetTriggers = true;
-    public float triggerResetDelay = 1f;
-
     [Header("Action Cooldowns")]
     public float interactCooldown = 1f;
     public float punchCooldown = 0.5f;
     public float inspectCooldown = 1.5f;
-
-    [Header("Debug")]
-    public bool showDebugLogs = true;
 
     // Components
     private Animator animator;
@@ -40,11 +33,6 @@ public class PlayerAnimationController : MonoBehaviour
     private float lastInteractTime;
     private float lastPunchTime;
     private float lastInspectTime;
-
-    // Auto-reset coroutines
-    private Coroutine resetInteractCoroutine;
-    private Coroutine resetPunchCoroutine;
-    private Coroutine resetInspectCoroutine;
 
     // Hash IDs for performance
     private int moveSpeedHash;
@@ -70,29 +58,6 @@ public class PlayerAnimationController : MonoBehaviour
 
         // Validate animator parameters
         ValidateAnimatorParameters();
-    }
-
-    void Update()
-    {
-        // Safety check - reset all triggers if we're stuck in action states for too long
-        if (autoResetTriggers)
-        {
-            CheckForStuckAnimations();
-        }
-    }
-
-    void CheckForStuckAnimations()
-    {
-        if (animator == null) return;
-
-        AnimatorStateInfo currentState = animator.GetCurrentAnimatorStateInfo(0);
-
-        // If we're in an action state for too long without transitioning, force reset
-        if (currentState.normalizedTime > 2f && !currentState.loop)
-        {
-            if (showDebugLogs) Debug.LogWarning("Animation appears stuck, forcing reset");
-            ResetAllTriggers();
-        }
     }
 
     void ValidateAnimatorParameters()
@@ -167,22 +132,9 @@ public class PlayerAnimationController : MonoBehaviour
     {
         if (CanPerformAction(lastInteractTime, interactCooldown))
         {
-            if (showDebugLogs) Debug.Log("Interact animation triggered");
-
-            // Stop any existing reset coroutine
-            if (resetInteractCoroutine != null)
-                StopCoroutine(resetInteractCoroutine);
-
             animator.SetTrigger(interactHash);
             lastInteractTime = Time.time;
-
-            // Auto-reset trigger after delay
-            if (autoResetTriggers)
-                resetInteractCoroutine = StartCoroutine(ResetTriggerAfterDelay(interactHash, triggerResetDelay));
-        }
-        else
-        {
-            if (showDebugLogs) Debug.Log("Interact on cooldown");
+            Debug.Log("Interact animation triggered");
         }
     }
 
@@ -190,22 +142,9 @@ public class PlayerAnimationController : MonoBehaviour
     {
         if (CanPerformAction(lastPunchTime, punchCooldown))
         {
-            if (showDebugLogs) Debug.Log("Punch animation triggered");
-
-            // Stop any existing reset coroutine
-            if (resetPunchCoroutine != null)
-                StopCoroutine(resetPunchCoroutine);
-
             animator.SetTrigger(punchHash);
             lastPunchTime = Time.time;
-
-            // Auto-reset trigger after delay
-            if (autoResetTriggers)
-                resetPunchCoroutine = StartCoroutine(ResetTriggerAfterDelay(punchHash, triggerResetDelay));
-        }
-        else
-        {
-            if (showDebugLogs) Debug.Log("Punch on cooldown");
+            Debug.Log("Punch animation triggered");
         }
     }
 
@@ -213,38 +152,15 @@ public class PlayerAnimationController : MonoBehaviour
     {
         if (CanPerformAction(lastInspectTime, inspectCooldown))
         {
-            if (showDebugLogs) Debug.Log("Inspect animation triggered");
-
-            // Stop any existing reset coroutine
-            if (resetInspectCoroutine != null)
-                StopCoroutine(resetInspectCoroutine);
-
             animator.SetTrigger(inspectHash);
             lastInspectTime = Time.time;
-
-            // Auto-reset trigger after delay
-            if (autoResetTriggers)
-                resetInspectCoroutine = StartCoroutine(ResetTriggerAfterDelay(inspectHash, triggerResetDelay));
-        }
-        else
-        {
-            if (showDebugLogs) Debug.Log("Inspect on cooldown");
+            Debug.Log("Inspect animation triggered");
         }
     }
 
     private bool CanPerformAction(float lastActionTime, float cooldown)
     {
         return Time.time - lastActionTime >= cooldown;
-    }
-
-    private System.Collections.IEnumerator ResetTriggerAfterDelay(int triggerHash, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        if (animator != null)
-        {
-            animator.ResetTrigger(triggerHash);
-            if (showDebugLogs) Debug.Log("Auto-reset trigger");
-        }
     }
 
     // Public getters for external scripts
@@ -256,38 +172,38 @@ public class PlayerAnimationController : MonoBehaviour
     // Animation Events - Call these from animation events in the Animator
     public void OnInteractAnimationStart()
     {
-        if (showDebugLogs) Debug.Log("Interact animation started");
+        Debug.Log("Interact animation started");
         // Add logic for when interact animation starts
     }
 
     public void OnInteractAnimationEnd()
     {
-        if (showDebugLogs) Debug.Log("Interact animation ended");
+        Debug.Log("Interact animation ended");
         // Add logic for when interact animation ends
     }
 
     public void OnPunchAnimationHit()
     {
-        if (showDebugLogs) Debug.Log("Punch hit frame");
+        Debug.Log("Punch hit frame");
         // Add logic for punch hit detection
         // This is typically called at the frame where the punch should deal damage
     }
 
     public void OnPunchAnimationEnd()
     {
-        if (showDebugLogs) Debug.Log("Punch animation ended");
+        Debug.Log("Punch animation ended");
         // Add logic for when punch animation ends
     }
 
     public void OnInspectAnimationStart()
     {
-        if (showDebugLogs) Debug.Log("Inspect animation started");
+        Debug.Log("Inspect animation started");
         // Add logic for when inspect animation starts
     }
 
     public void OnInspectAnimationEnd()
     {
-        if (showDebugLogs) Debug.Log("Inspect animation ended");
+        Debug.Log("Inspect animation ended");
         // Add logic for when inspect animation ends
     }
 
@@ -326,42 +242,6 @@ public class PlayerAnimationController : MonoBehaviour
     {
         if (animator == null) return false;
         return animator.GetCurrentAnimatorStateInfo(layerIndex).IsName(stateName);
-    }
-
-    // Debug methods
-    public void LogCurrentAnimationState()
-    {
-        if (animator == null) return;
-
-        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-        Debug.Log($"Current Animation: {stateInfo.fullPathHash} | Normalized Time: {stateInfo.normalizedTime:F2} | Is Looping: {stateInfo.loop}");
-    }
-
-    public void ResetAllTriggers()
-    {
-        if (animator == null) return;
-
-        animator.ResetTrigger(interactHash);
-        animator.ResetTrigger(punchHash);
-        animator.ResetTrigger(inspectHash);
-
-        // Stop any running reset coroutines
-        if (resetInteractCoroutine != null) { StopCoroutine(resetInteractCoroutine); resetInteractCoroutine = null; }
-        if (resetPunchCoroutine != null) { StopCoroutine(resetPunchCoroutine); resetPunchCoroutine = null; }
-        if (resetInspectCoroutine != null) { StopCoroutine(resetInspectCoroutine); resetInspectCoroutine = null; }
-
-        if (showDebugLogs) Debug.Log("All animation triggers reset");
-    }
-
-    public void ForceReturnToMovement()
-    {
-        if (animator == null) return;
-
-        // Reset all triggers and force back to movement
-        ResetAllTriggers();
-
-        // Force update movement parameters
-        if (showDebugLogs) Debug.Log("Forced return to movement state");
     }
 
     void OnDrawGizmosSelected()

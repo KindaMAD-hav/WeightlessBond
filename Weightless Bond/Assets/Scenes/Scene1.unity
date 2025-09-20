@@ -410,7 +410,6 @@ MonoBehaviour:
   jumpHeight: 1.5
   gravity: -20
   groundCheckDistance: 0.3
-  walkThreshold: 0.1
   runKey: 304
   jumpKey: 32
   interactKey: 101
@@ -688,16 +687,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationController
   moveSpeedParam: MoveSpeed
   isGroundedParam: IsGrounded
-  isWalkingParam: IsWalking
   isRunningParam: IsRunning
   interactTrigger: Interact
   punchTrigger: Punch
   inspectTrigger: Inspect
   animationSmoothTime: 0.1
+  runThreshold: 0.5
   interactCooldown: 1
   punchCooldown: 0.5
   inspectCooldown: 1.5
-  showDebugLogs: 1
 --- !u!95 &1564643976
 Animator:
   serializedVersion: 7
@@ -902,11 +900,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68d72f27dd8676541be056310d93c84b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FirstPersonCamera
-  mouseSensitivity: 4
-  verticalSensitivity: 4
-  horizontalSensitivity: 4
-  rotationSmoothing: 10
-  enableSmoothing: 1
+  mouseSensitivity: 100
+  verticalSensitivity: 100
+  horizontalSensitivity: 100
   minVerticalAngle: -90
   maxVerticalAngle: 90
   enableHeadBob: 1
