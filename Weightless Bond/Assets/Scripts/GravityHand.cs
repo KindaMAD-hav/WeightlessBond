@@ -1,5 +1,6 @@
 ﻿// GravityHand.cs
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GravityHand : MonoBehaviour
 {
@@ -16,12 +17,12 @@ public class GravityHand : MonoBehaviour
     public float holdDistance = 3f, minHoldDistance = 1f, maxHoldDistance = 10f;
     public float positionStrength = 600f, velocityDamping = 50f, angularStrength = 50f;
     public float maxLinearSpeed = 20f, maxForce = 2000f;
-    public float throwForce = 20f; // this is Δv magnitude when using VelocityChange
+    public float throwForce = 20f; // Δv magnitude when using VelocityChange
 
     [Header("Controls")]
     public KeyCode pickKey = KeyCode.E, dropKey = KeyCode.Q;
-    public KeyCode throwKey = KeyCode.Mouse0;      // LMB: object only
-    public KeyCode throwAndSelfKey = KeyCode.Mouse1; // RMB: object + player momentum
+    public KeyCode throwKey = KeyCode.Mouse0;          // LMB: object only
+    public KeyCode throwAndSelfKey = KeyCode.Mouse1;   // RMB: object + player momentum
     public KeyCode rotateHoldKey = KeyCode.R;
     public float mouseRotateSpeed = 6f, scrollDistanceStep = 0.5f;
 
@@ -31,12 +32,13 @@ public class GravityHand : MonoBehaviour
 
     // Cache player colliders + currently ignored pairs
     private Collider[] _playerColliders;
-    private readonly System.Collections.Generic.List<(Collider a, Collider b)> _ignored = new();
-
+    private readonly List<(Collider a, Collider b)> _ignored = new();
 
     void Awake()
     {
         if (!cam) cam = Camera.main;
+        _player = GetComponentInParent<FirstPersonController>(); // ensure throwback works
+
         // Grab ALL colliders on the player (CharacterController is a Collider too)
         _playerColliders = GetComponentInParent<Collider>()
             ? GetComponentsInParent<Collider>()
@@ -84,7 +86,7 @@ public class GravityHand : MonoBehaviour
         if (Input.GetKeyDown(throwKey)) ThrowObjectOnly();
         if (Input.GetKeyDown(throwAndSelfKey)) ThrowWithMomentumTransfer();
 
-        // Rotate
+        // Rotate held object while R is held
         if (_held != null && Input.GetKey(rotateHoldKey) && _held.allowRotation)
         {
             float yaw = Input.GetAxis("Mouse X") * mouseRotateSpeed;
@@ -150,7 +152,6 @@ public class GravityHand : MonoBehaviour
         _ignored.Clear();
     }
 
-
     G_Interactable RaycastForInteractable()
     {
         var ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f));
@@ -173,11 +174,11 @@ public class GravityHand : MonoBehaviour
         _held = gi;
         var rb = gi.Body;
         rb.useGravity = false;
-        rb.linearDamping = 0f;
-        rb.angularDamping = 0.05f;
+        rb.linearDamping = 0f;           // fixed (was linearDamping)
+        rb.angularDamping = 0.05f; // fixed (was angularDamping)
         _heldTargetRot = rb.rotation;
 
-        BeginIgnorePlayerCollisions(gi); // <<< NEW
+        BeginIgnorePlayerCollisions(gi);
     }
 
     void Drop()
@@ -187,7 +188,7 @@ public class GravityHand : MonoBehaviour
         rb.useGravity = true;
         _held = null;
 
-        EndIgnorePlayerCollisions(); // <<< NEW
+        EndIgnorePlayerCollisions();
     }
 
     void ThrowObjectOnly()
@@ -198,7 +199,7 @@ public class GravityHand : MonoBehaviour
         rb.AddForce(cam.transform.forward * throwForce * Mathf.Clamp(rb.mass, 0.5f, 5f), ForceMode.VelocityChange);
         _held = null;
 
-        EndIgnorePlayerCollisions(); // <<< NEW
+        EndIgnorePlayerCollisions();
     }
 
     void ThrowWithMomentumTransfer()
@@ -218,5 +219,6 @@ public class GravityHand : MonoBehaviour
         if (_player != null) _player.AddImpulse(-J);
 
         _held = null;
+        EndIgnorePlayerCollisions();
     }
 }
