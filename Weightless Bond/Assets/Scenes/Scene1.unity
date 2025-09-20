@@ -258,7 +258,7 @@ GameObject:
   - component: {fileID: 141672887}
   - component: {fileID: 141672886}
   - component: {fileID: 141672885}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -410,6 +410,7 @@ MonoBehaviour:
   jumpHeight: 1.5
   gravity: -20
   groundCheckDistance: 0.3
+  walkThreshold: 0.1
   runKey: 304
   jumpKey: 32
   interactKey: 101
@@ -687,12 +688,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationController
   moveSpeedParam: MoveSpeed
   isGroundedParam: IsGrounded
+  isWalkingParam: IsWalking
   isRunningParam: IsRunning
   interactTrigger: Interact
   punchTrigger: Punch
   inspectTrigger: Inspect
   animationSmoothTime: 0.1
-  runThreshold: 0.5
   interactCooldown: 1
   punchCooldown: 0.5
   inspectCooldown: 1.5
