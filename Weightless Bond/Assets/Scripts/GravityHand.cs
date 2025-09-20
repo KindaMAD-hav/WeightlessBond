@@ -29,11 +29,21 @@ public class GravityHand : MonoBehaviour
     Quaternion _heldTargetRot;
     FirstPersonController _player;   // for AddImpulse
 
+    // Cache player colliders + currently ignored pairs
+    private Collider[] _playerColliders;
+    private readonly System.Collections.Generic.List<(Collider a, Collider b)> _ignored = new();
+
+
     void Awake()
     {
         if (!cam) cam = Camera.main;
-        _player = GetComponentInParent<FirstPersonController>(); // lives on Player root
+        // Grab ALL colliders on the player (CharacterController is a Collider too)
+        _playerColliders = GetComponentInParent<Collider>()
+            ? GetComponentsInParent<Collider>()
+            : new Collider[0];
     }
+
+    void OnDisable() => EndIgnorePlayerCollisions();
 
     void Reset()
     {
@@ -114,6 +124,33 @@ public class GravityHand : MonoBehaviour
         }
     }
 
+    void BeginIgnorePlayerCollisions(G_Interactable gi)
+    {
+        if (_playerColliders == null || _playerColliders.Length == 0) return;
+        var heldCols = gi.GetComponentsInChildren<Collider>(includeInactive: false);
+        foreach (var pc in _playerColliders)
+        {
+            if (pc == null) continue;
+            foreach (var hc in heldCols)
+            {
+                if (hc == null || hc == pc) continue;
+                Physics.IgnoreCollision(pc, hc, true);
+                _ignored.Add((pc, hc));
+            }
+        }
+    }
+
+    void EndIgnorePlayerCollisions()
+    {
+        for (int i = 0; i < _ignored.Count; i++)
+        {
+            var (a, b) = _ignored[i];
+            if (a && b) Physics.IgnoreCollision(a, b, false);
+        }
+        _ignored.Clear();
+    }
+
+
     G_Interactable RaycastForInteractable()
     {
         var ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f));
@@ -139,13 +176,18 @@ public class GravityHand : MonoBehaviour
         rb.linearDamping = 0f;
         rb.angularDamping = 0.05f;
         _heldTargetRot = rb.rotation;
+
+        BeginIgnorePlayerCollisions(gi); // <<< NEW
     }
 
     void Drop()
     {
         if (_held == null) return;
-        _held.Body.useGravity = true;
+        var rb = _held.Body;
+        rb.useGravity = true;
         _held = null;
+
+        EndIgnorePlayerCollisions(); // <<< NEW
     }
 
     void ThrowObjectOnly()
@@ -153,12 +195,10 @@ public class GravityHand : MonoBehaviour
         if (_held == null) return;
         var rb = _held.Body;
         rb.useGravity = true;
-
-        // Δv to object (VelocityChange): magnitude = throwForce
-        Vector3 deltaV = cam.transform.forward * throwForce;
-        rb.AddForce(deltaV, ForceMode.VelocityChange);
-
+        rb.AddForce(cam.transform.forward * throwForce * Mathf.Clamp(rb.mass, 0.5f, 5f), ForceMode.VelocityChange);
         _held = null;
+
+        EndIgnorePlayerCollisions(); // <<< NEW
     }
 
     void ThrowWithMomentumTransfer()
