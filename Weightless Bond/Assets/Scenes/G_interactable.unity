@@ -406,6 +406,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 361e32c8e5e94e84192f5cdbcea8c24d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FirstPersonController
+  playerMass: 80
+  airDrag: 0.05
+  groundFriction: 15
   walkSpeed: 3
   runSpeed: 6
   jumpHeight: 1.5
@@ -570,15 +573,13 @@ MonoBehaviour:
   positionStrength: 600
   velocityDamping: 50
   angularStrength: 50
-  maxLinearSpeed: 20
+  maxLinearSpeed: 1000
   maxForce: 2000
   throwForce: 20
-  selfKnockbackStrength: 8
-  selfKnockbackDuration: 0.15
   pickKey: 101
   dropKey: 113
   throwKey: 323
-  throwSelfKey: 324
+  throwAndSelfKey: 324
   rotateHoldKey: 114
   mouseRotateSpeed: 6
   scrollDistanceStep: 0.5
@@ -891,7 +892,7 @@ MonoBehaviour:
   maxHoldDistance: 12
   massClamp: 50
   useMassForThrowback: 0
-  throwbackWeight: 10
+  throwbackWeight: 100
 --- !u!1 &1263018077
 GameObject:
   m_ObjectHideFlags: 0
@@ -1851,8 +1852,8 @@ MonoBehaviour:
   maxPickupDistance: 8
   maxHoldDistance: 12
   massClamp: 50
-  useMassForThrowback: 1
-  throwbackWeight: 1
+  useMassForThrowback: 0
+  throwbackWeight: 10
 --- !u!114 &1844296933
 MonoBehaviour:
   m_ObjectHideFlags: 0

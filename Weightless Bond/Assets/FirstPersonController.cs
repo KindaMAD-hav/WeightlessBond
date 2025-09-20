@@ -5,11 +5,12 @@
 public class FirstPersonController : MonoBehaviour
 {
     [Header("Physics / Momentum")]
-    public float playerMass = 80f;          // effective player mass (kg-ish)
-    public float airDrag = 0.0f;            // minimal damping in air (0..1 per second)
-    public float groundFriction = 6f;       // how quickly extra velocity is bled when grounded
+    public float playerMass = 80f;     // effective mass for impulses
+    public float airDrag = 0.05f;      // 0..1 per second, tiny
+    public float groundFriction = 6f;  // how fast we bleed horizontal speed when grounded
 
-    private Vector3 externalVelocity;       // accumulated Δv from impulses (world space)
+    private Vector3 worldVel;          // full velocity, includes impulses & gravity
+
 
     [Header("Movement Settings")]
     public float walkSpeed = 3f;
@@ -87,9 +88,9 @@ public class FirstPersonController : MonoBehaviour
     public void AddImpulse(Vector3 impulseWorld)
     {
         // Δv = J / m
-        Vector3 dv = impulseWorld / Mathf.Max(0.01f, playerMass);
-        externalVelocity += dv;
+        worldVel += impulseWorld / Mathf.Max(0.01f, playerMass);
     }
+
 
     void HandleInput()
     {
@@ -117,31 +118,35 @@ public class FirstPersonController : MonoBehaviour
     {
         // Ground check
         isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask);
-        if (isGrounded && velocity.y < 0f) velocity.y = -2f;
 
-        // Planar input
-        Vector3 input = transform.right * horizontal + transform.forward * vertical;
-        if (inputMagnitude > walkThreshold) input = input.normalized * currentSpeed;
-        else input = Vector3.zero;
+        // Keep us snapped when grounded and moving downward
+        if (isGrounded && worldVel.y < 0f)
+            worldVel.y = -2f;
 
-        // Jump
-        if (Input.GetKeyDown(jumpKey) && isGrounded)
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        // Input-driven planar velocity (quick & responsive)
+        Vector3 wishMove = Vector3.zero;
+        if (inputMagnitude > walkThreshold)
+            wishMove = (transform.right * horizontal + transform.forward * vertical).normalized * currentSpeed;
 
-        // Gravity
-        velocity.y += gravity * Time.deltaTime;
+        // Gravity on the *full* velocity
+        worldVel.y += gravity * Time.deltaTime;
 
-        // --- Momentum integration ---
-        // Apply simple friction to externalVelocity
+        // Friction / drag (don’t fight player input)
+        Vector3 horiz = new Vector3(worldVel.x, 0f, worldVel.z);
         if (isGrounded)
-            externalVelocity = Vector3.MoveTowards(externalVelocity, Vector3.zero, groundFriction * Time.deltaTime);
+            horiz = Vector3.MoveTowards(horiz, Vector3.zero, groundFriction * Time.deltaTime);
         else
-            externalVelocity *= Mathf.Clamp01(1f - airDrag * Time.deltaTime);
+            horiz *= Mathf.Clamp01(1f - airDrag * Time.deltaTime);
+        worldVel = new Vector3(horiz.x, worldVel.y, horiz.z);
 
-        // ONE move call
-        Vector3 motion = (input + externalVelocity + new Vector3(0f, velocity.y, 0f)) * Time.deltaTime;
+        // ONE move: input velocity + momentum velocity
+        Vector3 motion = (wishMove + worldVel) * Time.deltaTime;
         controller.Move(motion);
+
+        // If we just landed, kill tiny downward creep
+        if (isGrounded && worldVel.y < 0f) worldVel.y = -2f;
     }
+
 
 
     void HandleActions()

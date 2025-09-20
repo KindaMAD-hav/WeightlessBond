@@ -164,18 +164,18 @@ public class GravityHand : MonoBehaviour
     void ThrowWithMomentumTransfer()
     {
         if (_held == null) return;
+
         var rb = _held.Body;
         rb.useGravity = true;
 
-        // 1) Give object Δv
+        // 1) Give object Δv (VelocityChange)
         Vector3 deltaV = cam.transform.forward * throwForce;
         rb.AddForce(deltaV, ForceMode.VelocityChange);
 
-        // 2) Compute impulse and give equal & opposite to player
-        float m_eff = _held.GetThrowbackMassLike(); // mass or designer weight
-        Vector3 J = m_eff * deltaV;                 // impulse to object
-        if (_player != null)
-            _player.AddImpulse(-J);                 // equal & opposite to player
+        // 2) Equal & opposite impulse to player
+        float mEff = _held.GetThrowbackMassLike(); // mass or designer weight
+        Vector3 J = mEff * deltaV;
+        if (_player != null) _player.AddImpulse(-J);
 
         _held = null;
     }
