@@ -103,9 +103,9 @@ public class GravityHand : MonoBehaviour
         // Target position
         Vector3 targetPos = holdPoint.position;
         Vector3 toTarget = targetPos - rb.worldCenterOfMass;
-        Vector3 desiredVel = Vector3.ClampMagnitude(toTarget * (positionStrength / Mathf.Max(rb.mass, 0.01f)) - rb.velocity * velocityDamping, maxLinearSpeed);
+        Vector3 desiredVel = Vector3.ClampMagnitude(toTarget * (positionStrength / Mathf.Max(rb.mass, 0.01f)) - rb.linearVelocity * velocityDamping, maxLinearSpeed);
 
-        Vector3 force = (desiredVel - rb.velocity) * rb.mass;
+        Vector3 force = (desiredVel - rb.linearVelocity) * rb.mass;
         force = Vector3.ClampMagnitude(force, maxForce);
         rb.AddForce(force, ForceMode.Force);
 
@@ -146,8 +146,8 @@ public class GravityHand : MonoBehaviour
         _held = gi;
         var rb = gi.Body;
         rb.useGravity = false;
-        rb.drag = 0f;
-        rb.angularDrag = 0.05f;
+        rb.linearDamping = 0f;
+        rb.angularDamping = 0.05f;
         _heldTargetRot = rb.rotation;
     }
 
