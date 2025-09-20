@@ -1,9 +1,16 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(AudioSource))]
 public class FirstPersonController : MonoBehaviour
 {
+    [Header("Physics / Momentum")]
+    public float playerMass = 80f;          // effective player mass (kg-ish)
+    public float airDrag = 0.0f;            // minimal damping in air (0..1 per second)
+    public float groundFriction = 6f;       // how quickly extra velocity is bled when grounded
+
+    private Vector3 externalVelocity;       // accumulated Δv from impulses (world space)
+
     [Header("Movement Settings")]
     public float walkSpeed = 3f;
     public float runSpeed = 6f;
@@ -77,6 +84,13 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+    public void AddImpulse(Vector3 impulseWorld)
+    {
+        // Δv = J / m
+        Vector3 dv = impulseWorld / Mathf.Max(0.01f, playerMass);
+        externalVelocity += dv;
+    }
+
     void HandleInput()
     {
         horizontal = Input.GetAxis("Horizontal");
@@ -103,16 +117,12 @@ public class FirstPersonController : MonoBehaviour
     {
         // Ground check
         isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask);
+        if (isGrounded && velocity.y < 0f) velocity.y = -2f;
 
-        if (isGrounded && velocity.y < 0f)
-            velocity.y = -2f; // keep snapped to ground
-
-        // Planar input (only if above threshold)
+        // Planar input
         Vector3 input = transform.right * horizontal + transform.forward * vertical;
-        if (inputMagnitude > walkThreshold)
-            input = input.normalized * currentSpeed;
-        else
-            input = Vector3.zero;
+        if (inputMagnitude > walkThreshold) input = input.normalized * currentSpeed;
+        else input = Vector3.zero;
 
         // Jump
         if (Input.GetKeyDown(jumpKey) && isGrounded)
@@ -121,10 +131,18 @@ public class FirstPersonController : MonoBehaviour
         // Gravity
         velocity.y += gravity * Time.deltaTime;
 
+        // --- Momentum integration ---
+        // Apply simple friction to externalVelocity
+        if (isGrounded)
+            externalVelocity = Vector3.MoveTowards(externalVelocity, Vector3.zero, groundFriction * Time.deltaTime);
+        else
+            externalVelocity *= Mathf.Clamp01(1f - airDrag * Time.deltaTime);
+
         // ONE move call
-        Vector3 motion = (input + new Vector3(0f, velocity.y, 0f)) * Time.deltaTime;
+        Vector3 motion = (input + externalVelocity + new Vector3(0f, velocity.y, 0f)) * Time.deltaTime;
         controller.Move(motion);
     }
+
 
     void HandleActions()
     {
