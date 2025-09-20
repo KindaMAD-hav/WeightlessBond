@@ -413,7 +413,7 @@ MonoBehaviour:
   runSpeed: 6
   jumpHeight: 1.5
   gravity: -20
-  groundCheckDistance: 0.3
+  groundCheckDistance: 1.11
   walkThreshold: 0.1
   runKey: 304
   jumpKey: 32
@@ -423,7 +423,7 @@ MonoBehaviour:
   groundCheck: {fileID: 1731427235}
   groundMask:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 8
   footstepSounds: []
   footstepInterval: 0.5
 --- !u!82 &383160849
@@ -567,9 +567,9 @@ MonoBehaviour:
     m_Bits: 64
   maxRayDistance: 12
   aimRadiusDegrees: 3
-  holdDistance: 3
-  minHoldDistance: 1
-  maxHoldDistance: 10
+  holdDistance: 2.5
+  minHoldDistance: 1.5
+  maxHoldDistance: 4
   positionStrength: 600
   velocityDamping: 50
   angularStrength: 50
@@ -1388,7 +1388,7 @@ Transform:
   m_GameObject: {fileID: 1731427234}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.63, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
