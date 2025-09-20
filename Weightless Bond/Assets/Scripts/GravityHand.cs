@@ -1,5 +1,6 @@
 // GravityHand.cs
 using UnityEngine;
+using System.Collections;
 
 public class GravityHand : MonoBehaviour
 {
@@ -23,17 +24,23 @@ public class GravityHand : MonoBehaviour
     public float maxForce = 2000f;
     public float throwForce = 20f;
 
+    [Header("Self Knockback")]
+    [Tooltip("Base strength for player knockback when right-click throwing.")]
+    public float selfKnockbackStrength = 8f;
+    [Tooltip("Duration of the knockback push (seconds).")]
+    public float selfKnockbackDuration = 0.15f;
+
     [Header("Controls")]
     public KeyCode pickKey = KeyCode.E;
     public KeyCode dropKey = KeyCode.Q;
-    public KeyCode throwKey = KeyCode.Mouse1; // right click
-    public KeyCode rotateHoldKey = KeyCode.R; // hold and move mouse to rotate
+    public KeyCode throwKey = KeyCode.Mouse0;      // LEFT CLICK = throw object
+    public KeyCode throwSelfKey = KeyCode.Mouse1;  // RIGHT CLICK = throw + knockback
+    public KeyCode rotateHoldKey = KeyCode.R;      // hold and move mouse to rotate
     public float mouseRotateSpeed = 6f;
     public float scrollDistanceStep = 0.5f;
 
     G_Interactable _aimed;
     G_Interactable _held;
-    Vector3 _lastCamRot; // for rotation delta
     Quaternion _heldTargetRot;
 
     void Reset()
@@ -55,36 +62,31 @@ public class GravityHand : MonoBehaviour
 
         // Aim / highlight
         _aimed = RaycastForInteractable();
-
         if (_aimed) _aimed.OnFocus(true);
 
         // Scroll to change distance
         var scroll = Input.mouseScrollDelta.y;
         if (Mathf.Abs(scroll) > 0.01f)
-        {
             holdDistance = Mathf.Clamp(holdDistance + scroll * scrollDistanceStep, minHoldDistance, maxHoldDistance);
-        }
         holdPoint.localPosition = new Vector3(0, 0, holdDistance);
 
-        // Pick up / drop / throw
+        // Pick / drop
         if (Input.GetKeyDown(pickKey))
         {
-            if (_held == null && _aimed != null)
-                TryPickup(_aimed);
-            else if (_held != null)
-                Drop();
+            if (_held == null && _aimed != null) TryPickup(_aimed);
+            else if (_held != null) Drop();
         }
-
         if (Input.GetKeyDown(dropKey)) Drop();
 
+        // Throws
         if (Input.GetKeyDown(throwKey)) Throw();
+        if (Input.GetKeyDown(throwSelfKey)) ThrowWithSelfKnockback();
 
         // Rotate while holding R + mouse move
         if (_held != null && Input.GetKey(rotateHoldKey) && _held.allowRotation)
         {
             float yaw = Input.GetAxis("Mouse X") * mouseRotateSpeed;
             float pitch = -Input.GetAxis("Mouse Y") * mouseRotateSpeed;
-
             var delta = Quaternion.Euler(pitch, yaw, 0);
             _heldTargetRot = delta * _heldTargetRot;
         }
@@ -100,10 +102,14 @@ public class GravityHand : MonoBehaviour
         // Disable gravity while holding
         rb.useGravity = false;
 
-        // Target position
+        // Target position (PID-ish)
         Vector3 targetPos = holdPoint.position;
         Vector3 toTarget = targetPos - rb.worldCenterOfMass;
-        Vector3 desiredVel = Vector3.ClampMagnitude(toTarget * (positionStrength / Mathf.Max(rb.mass, 0.01f)) - rb.linearVelocity * velocityDamping, maxLinearSpeed);
+
+        Vector3 desiredVel =
+            Vector3.ClampMagnitude(
+                toTarget * (positionStrength / Mathf.Max(rb.mass, 0.01f)) - rb.linearVelocity * velocityDamping,
+                maxLinearSpeed);
 
         Vector3 force = (desiredVel - rb.linearVelocity) * rb.mass;
         force = Vector3.ClampMagnitude(force, maxForce);
@@ -130,7 +136,7 @@ public class GravityHand : MonoBehaviour
             var gi = hit.collider.GetComponentInParent<G_Interactable>();
             if (gi)
             {
-                // Optional tighter "center window" check:
+                // Optional tighter center window:
                 Vector3 dirToHit = (hit.point - cam.transform.position).normalized;
                 float angle = Vector3.Angle(cam.transform.forward, dirToHit);
                 if (angle <= aimRadiusDegrees) return gi;
@@ -166,5 +172,36 @@ public class GravityHand : MonoBehaviour
         rb.useGravity = true;
         rb.AddForce(cam.transform.forward * throwForce * Mathf.Clamp(rb.mass, 0.5f, 5f), ForceMode.VelocityChange);
         _held = null;
+    }
+
+    void ThrowWithSelfKnockback()
+    {
+        if (_held == null) return;
+
+        var rb = _held.Body;
+        // First: throw the object forward (same as normal throw)
+        rb.useGravity = true;
+        rb.AddForce(cam.transform.forward * throwForce * Mathf.Clamp(rb.mass, 0.5f, 5f), ForceMode.VelocityChange);
+
+        // Then: knock the player backward
+        float factor = _held.GetThrowbackFactor(); // mass or designer weight
+        Vector3 dir = -cam.transform.forward;      // opposite the throw direction
+        StartCoroutine(ApplyPlayerKnockback(dir, selfKnockbackStrength * factor, selfKnockbackDuration));
+
+        _held = null;
+    }
+
+    IEnumerator ApplyPlayerKnockback(Vector3 dir, float strength, float duration)
+    {
+        // Move the CharacterController directly for a brief burst
+        var cc = cam ? cam.GetComponentInParent<CharacterController>() : null;
+        float t = 0f;
+        while (cc != null && t < duration)
+        {
+            // Move in world space (controller handles collisions)
+            cc.Move(dir * strength * Time.deltaTime);
+            t += Time.deltaTime;
+            yield return null;
+        }
     }
 }
