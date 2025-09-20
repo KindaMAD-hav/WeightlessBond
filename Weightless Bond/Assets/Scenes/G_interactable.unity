@@ -713,7 +713,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 1ee47bb5c5744b64ea15ae5cce7a304c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -771,9 +771,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42764187f12337348bc4d6a735df7b36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Highlighter
-  renderers: []
+  renderers:
+  - {fileID: 1245700072}
   emissionColorName: _EmissionColor
-  onColor: {r: 0.6, g: 1.4, b: 2, a: 2}
+  onColor: {r: 1, g: 0.016587388, b: 0, a: 2}
   fadeSpeed: 12
 --- !u!54 &1245700076
 Rigidbody:
