@@ -2,6 +2,13 @@ using UnityEngine;
 
 public class FirstPersonCamera : MonoBehaviour
 {
+    [Header("Mouse Stability")]
+    [Tooltip("Maximum mouse delta per frame (degrees). Prevents spikes on hitches/focus changes).")]
+    public float maxDeltaPerFrame = 8f;
+
+    bool wasLockedLastFrame = false;
+    bool skipOneFrameMouse = false;
+
     [Header("Mouse Sensitivity")]
     public float horizontalSensitivity = 100f;
     public float verticalSensitivity = 100f;
@@ -79,27 +86,44 @@ public class FirstPersonCamera : MonoBehaviour
 
     void Update()
     {
-        HandleMouseInput();
-        HandleCameraRotation();
+        HandleCursorToggle();               // may set skipOneFrameMouse
+        HandleMouseInput();                 // safe read
+        HandleCameraRotation();             // apply yaw/pitch
+
         HandleHeadBob();
         HandleCameraSway();
         HandleFOVChange();
-        HandleCursorToggle();
     }
 
     void HandleMouseInput()
     {
-        mouseX = Input.GetAxis("Mouse X") * horizontalSensitivity * Time.deltaTime;
-        mouseY = Input.GetAxis("Mouse Y") * verticalSensitivity * Time.deltaTime;
+        // If cursor just got locked/unlocked or we asked to skip, kill one frame of input to avoid spikes
+        if (skipOneFrameMouse)
+        {
+            mouseX = mouseY = 0f;
+            skipOneFrameMouse = false;
+            return;
+        }
+
+        // Raw mouse deltas; DO NOT multiply by Time.deltaTime
+        float rawX = Input.GetAxisRaw("Mouse X");
+        float rawY = Input.GetAxisRaw("Mouse Y");
+
+        // Scale by sensitivities
+        mouseX = rawX * horizontalSensitivity;
+        mouseY = rawY * verticalSensitivity;
+
+        // Clamp per-frame to nuke rare +huge deltas
+        mouseX = Mathf.Clamp(mouseX, -maxDeltaPerFrame, maxDeltaPerFrame);
+        mouseY = Mathf.Clamp(mouseY, -maxDeltaPerFrame, maxDeltaPerFrame);
     }
 
     void HandleCameraRotation()
     {
-        // Yaw on player (root). If still missing, fall back to this transform's parent.
-        if (yawTarget)
-            yawTarget.Rotate(Vector3.up * mouseX, Space.Self);
+        // Yaw on player root (yawTarget)
+        if (yawTarget) yawTarget.Rotate(Vector3.up * mouseX, Space.Self);
 
-        // Pitch on camera (local)
+        // Pitch on camera
         xRotation = Mathf.Clamp(xRotation - mouseY, minVerticalAngle, maxVerticalAngle);
         transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
@@ -155,7 +179,16 @@ public class FirstPersonCamera : MonoBehaviour
 
     void HandleCursorToggle()
     {
+        // Optional: toggle with Esc
         if (Input.GetKeyDown(KeyCode.Escape)) ToggleCursor();
+
+        bool isLocked = Cursor.lockState == CursorLockMode.Locked;
+        if (isLocked != wasLockedLastFrame)
+        {
+            // Cursor state changed this frame; discard next mouse read
+            skipOneFrameMouse = true;
+            wasLockedLastFrame = isLocked;
+        }
     }
 
     public void ToggleCursor()

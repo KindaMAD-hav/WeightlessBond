@@ -1363,8 +1363,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68d72f27dd8676541be056310d93c84b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FirstPersonCamera
-  horizontalSensitivity: 100
-  verticalSensitivity: 100
+  maxDeltaPerFrame: 8
+  horizontalSensitivity: 5
+  verticalSensitivity: 5
   minVerticalAngle: -90
   maxVerticalAngle: 90
   enableHeadBob: 1
