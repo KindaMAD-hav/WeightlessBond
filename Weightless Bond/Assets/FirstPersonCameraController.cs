@@ -3,9 +3,17 @@ using UnityEngine;
 public class FirstPersonCamera : MonoBehaviour
 {
     [Header("Mouse Sensitivity")]
-    public float mouseSensitivity = 100f;
-    public float verticalSensitivity = 100f;
-    public float horizontalSensitivity = 100f;
+    [Range(0.1f, 10f)]
+    public float mouseSensitivity = 2f;
+    [Range(0.1f, 10f)]
+    public float verticalSensitivity = 2f;
+    [Range(0.1f, 10f)]
+    public float horizontalSensitivity = 2f;
+
+    [Header("Camera Smoothing")]
+    [Range(1f, 20f)]
+    public float rotationSmoothing = 10f;
+    public bool enableSmoothing = true;
 
     [Header("Camera Limits")]
     public float minVerticalAngle = -90f;
@@ -34,6 +42,9 @@ public class FirstPersonCamera : MonoBehaviour
 
     // Rotation variables
     private float xRotation = 0f;
+    private float yRotation = 0f;
+    private float targetXRotation = 0f;
+    private float targetYRotation = 0f;
     private float mouseX;
     private float mouseY;
 
@@ -79,8 +90,13 @@ public class FirstPersonCamera : MonoBehaviour
 
     void HandleMouseInput()
     {
-        mouseX = Input.GetAxis("Mouse X") * horizontalSensitivity * Time.deltaTime;
-        mouseY = Input.GetAxis("Mouse Y") * verticalSensitivity * Time.deltaTime;
+        // Get raw input
+        float rawMouseX = Input.GetAxis("Mouse X");
+        float rawMouseY = Input.GetAxis("Mouse Y");
+
+        // Apply sensitivity
+        mouseX = rawMouseX * horizontalSensitivity;
+        mouseY = rawMouseY * verticalSensitivity;
     }
 
     void HandleCameraRotation()
@@ -170,6 +186,16 @@ public class FirstPersonCamera : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             ToggleCursor();
+        }
+
+        // Lock cursor when clicking in game window
+        if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2))
+        {
+            if (Cursor.lockState != CursorLockMode.Locked)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
         }
     }
 

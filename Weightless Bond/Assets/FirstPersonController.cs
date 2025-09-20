@@ -142,7 +142,8 @@ public class FirstPersonController : MonoBehaviour
             PerformInteract();
         }
 
-        if (Input.GetKeyDown(punchKey))
+        // Only trigger punch if cursor is locked (prevents conflicts with UI)
+        if (Input.GetKeyDown(punchKey) && Cursor.lockState == CursorLockMode.Locked)
         {
             PerformPunch();
         }
