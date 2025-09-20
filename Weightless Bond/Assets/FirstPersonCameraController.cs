@@ -3,9 +3,8 @@ using UnityEngine;
 public class FirstPersonCamera : MonoBehaviour
 {
     [Header("Mouse Sensitivity")]
-    public float mouseSensitivity = 100f;
-    public float verticalSensitivity = 100f;
     public float horizontalSensitivity = 100f;
+    public float verticalSensitivity = 100f;
 
     [Header("Camera Limits")]
     public float minVerticalAngle = -90f;
@@ -27,42 +26,53 @@ public class FirstPersonCamera : MonoBehaviour
     public float runningFOV = 70f;
     public float fovTransitionSpeed = 2f;
 
-    // References
-    private Transform playerBody;
+    [Header("Targets")]
+    [Tooltip("Who receives YAW (left/right). Drag the Player root (with FirstPersonController). If empty, auto-find.")]
+    [SerializeField] private Transform yawTarget;
+
+    // Refs
     private FirstPersonController playerController;
     private Camera cam;
 
-    // Rotation variables
-    private float xRotation = 0f;
-    private float mouseX;
-    private float mouseY;
+    // Rotation
+    private float xRotation = 0f; // pitch
+    private float mouseX, mouseY;
 
-    // Head bob variables
+    // Head bob
     private Vector3 originalCameraPosition;
     private float bobTimer = 0f;
     private bool wasMoving = false;
 
-    // Camera sway variables
+    // Sway
     private Vector3 swayPosition;
 
-    // FOV variables
+    // FOV
     private float targetFOV;
+
+    void Awake()
+    {
+        cam = GetComponent<Camera>();
+
+        // Auto-find a good yaw target if none assigned:
+        if (!yawTarget)
+        {
+            // Try to find the FirstPersonController in parents and use its transform
+            var fpc = GetComponentInParent<FirstPersonController>();
+            if (fpc) yawTarget = fpc.transform;
+            else if (transform.parent) yawTarget = transform.parent; // fallback: holder
+        }
+
+        // Cache controller if present
+        if (!playerController && yawTarget)
+            playerController = yawTarget.GetComponent<FirstPersonController>();
+    }
 
     void Start()
     {
-        // Get references
-        playerBody = transform.parent; // PlayerCameraHolder
-        if (playerBody != null)
-        {
-            playerController = playerBody.parent.GetComponent<FirstPersonController>(); // Player
-        }
-        cam = GetComponent<Camera>();
-
-        // Store original camera position for head bob
         originalCameraPosition = transform.localPosition;
         targetFOV = normalFOV;
 
-        // Ensure cursor is locked
+        // Own cursor here. If you keep it here, remove it from FirstPersonController.Start()
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -85,16 +95,12 @@ public class FirstPersonCamera : MonoBehaviour
 
     void HandleCameraRotation()
     {
-        // Rotate player body horizontally
-        if (playerBody != null)
-        {
-            playerBody.Rotate(Vector3.up * mouseX);
-        }
+        // Yaw on player (root). If still missing, fall back to this transform's parent.
+        if (yawTarget)
+            yawTarget.Rotate(Vector3.up * mouseX, Space.Self);
 
-        // Rotate camera vertically
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, minVerticalAngle, maxVerticalAngle);
-
+        // Pitch on camera (local)
+        xRotation = Mathf.Clamp(xRotation - mouseY, minVerticalAngle, maxVerticalAngle);
         transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
@@ -106,27 +112,19 @@ public class FirstPersonCamera : MonoBehaviour
 
         if (isMoving)
         {
-            // Calculate bob
-            float speedMultiplier = playerController.IsRunning() ? 1.5f : 1f;
-            bobTimer += Time.deltaTime * bobFrequency * speedMultiplier;
+            float speedMult = playerController.IsRunning() ? 1.5f : 1f;
+            bobTimer += Time.deltaTime * bobFrequency * speedMult;
 
             float bobX = Mathf.Sin(bobTimer) * bobAmplitude * 0.5f;
-            float bobY = Mathf.Sin(bobTimer * 2) * bobAmplitude;
+            float bobY = Mathf.Sin(bobTimer * 2f) * bobAmplitude;
 
-            Vector3 bobOffset = new Vector3(bobX, bobY, 0);
-            Vector3 targetPosition = originalCameraPosition + bobOffset;
-
-            transform.localPosition = Vector3.Lerp(transform.localPosition, targetPosition,
-                bobSmoothing * Time.deltaTime);
-
+            Vector3 targetPos = originalCameraPosition + new Vector3(bobX, bobY, 0f);
+            transform.localPosition = Vector3.Lerp(transform.localPosition, targetPos, bobSmoothing * Time.deltaTime);
             wasMoving = true;
         }
         else if (wasMoving)
         {
-            // Return to original position smoothly
-            transform.localPosition = Vector3.Lerp(transform.localPosition, originalCameraPosition,
-                bobSmoothing * Time.deltaTime);
-
+            transform.localPosition = Vector3.Lerp(transform.localPosition, originalCameraPosition, bobSmoothing * Time.deltaTime);
             if (Vector3.Distance(transform.localPosition, originalCameraPosition) < 0.01f)
             {
                 transform.localPosition = originalCameraPosition;
@@ -140,37 +138,24 @@ public class FirstPersonCamera : MonoBehaviour
     {
         if (!enableSway) return;
 
-        // Calculate sway based on mouse movement
-        Vector3 targetSway = new Vector3(-mouseY * swayAmount, mouseX * swayAmount, 0);
+        Vector3 targetSway = new Vector3(-mouseY * swayAmount, mouseX * swayAmount, 0f);
         swayPosition = Vector3.Lerp(swayPosition, targetSway, swaySmoothing * Time.deltaTime);
 
-        // Apply sway to camera position (additive to head bob)
-        Vector3 finalPosition = transform.localPosition + swayPosition;
-
-        if (!enableHeadBob || playerController == null || (!playerController.IsWalking() && !playerController.IsRunning()))
-        {
-            transform.localPosition = Vector3.Lerp(transform.localPosition,
-                originalCameraPosition + swayPosition, swaySmoothing * Time.deltaTime);
-        }
+        // Add to current local position (plays nicely with bob)
+        transform.localPosition = Vector3.Lerp(transform.localPosition, originalCameraPosition + swayPosition, swaySmoothing * Time.deltaTime);
     }
 
     void HandleFOVChange()
     {
-        if (cam == null || playerController == null) return;
+        if (!cam) return;
 
-        // Change FOV based on running state
-        targetFOV = playerController.IsRunning() ? runningFOV : normalFOV;
-
-        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFOV, fovTransitionSpeed * Time.deltaTime);
+        float desired = (playerController != null && playerController.IsRunning()) ? runningFOV : normalFOV;
+        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, desired, fovTransitionSpeed * Time.deltaTime);
     }
 
     void HandleCursorToggle()
     {
-        // Toggle cursor with Escape key
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            ToggleCursor();
-        }
+        if (Input.GetKeyDown(KeyCode.Escape)) ToggleCursor();
     }
 
     public void ToggleCursor()
@@ -187,41 +172,10 @@ public class FirstPersonCamera : MonoBehaviour
         }
     }
 
-    public void SetSensitivity(float sensitivity)
-    {
-        mouseSensitivity = sensitivity;
-        horizontalSensitivity = sensitivity;
-        verticalSensitivity = sensitivity;
-    }
-
+    // Convenience setters
     public void SetMouseSensitivity(float horizontal, float vertical)
     {
         horizontalSensitivity = horizontal;
         verticalSensitivity = vertical;
-    }
-
-    // Public methods for external camera control
-    public void AddCameraShake(float intensity, float duration)
-    {
-        StartCoroutine(CameraShake(intensity, duration));
-    }
-
-    private System.Collections.IEnumerator CameraShake(float intensity, float duration)
-    {
-        Vector3 originalPos = transform.localPosition;
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            float x = Random.Range(-1f, 1f) * intensity;
-            float y = Random.Range(-1f, 1f) * intensity;
-
-            transform.localPosition = originalPos + new Vector3(x, y, 0);
-
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        transform.localPosition = originalPos;
     }
 }
