@@ -11,6 +11,15 @@ public class FirstPersonController : MonoBehaviour
 
     private Vector3 worldVel;          // full velocity, includes impulses & gravity
 
+    [Header("Ground Accel")]
+    public float groundAcceleration = 50f;
+
+    [Header("Air Accel / Strafe")]
+    public float airAcceleration = 12f;          // forward/back while airborne
+    public float airStrafeAcceleration = 50f;    // pure A/D strafing in air
+    public float airControl = 0.30f;             // how well you can “turn” your velocity mid-air (0..1)
+    public float airMaxSpeed = 7f;               // cap for forward/back air acceleration
+    public float airStrafeMaxSpeed = 30f;        // higher cap for pure strafe
 
     [Header("Movement Settings")]
     public float walkSpeed = 3f;
@@ -116,44 +125,63 @@ public class FirstPersonController : MonoBehaviour
 
     void HandleMovement()
     {
-        // ---- Robust Ground Check (SphereCast from controller center) ----
-        // Make sure your Player is on its own layer, and that layer is EXCLUDED from 'groundMask'.
-        Vector3 ccCenter = transform.position + controller.center;
-        float radius = Mathf.Max(0.05f, controller.radius - 0.02f);
-        float castDist = controller.skinWidth + groundCheckDistance; // small margin past skin
-        isGrounded = Physics.SphereCast(
-            ccCenter, radius, Vector3.down, out _, castDist, groundMask, QueryTriggerInteraction.Ignore
-        );
+        // Ground check
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask);
 
-        // Jump (set vertical vel directly)
+        // Jump
         if (Input.GetKeyDown(jumpKey) && isGrounded)
             worldVel.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
 
-        // If grounded and moving downward, keep a tiny stick-to-ground
+        // Stick to ground when grounded & falling
         if (isGrounded && worldVel.y < 0f)
             worldVel.y = -2f;
 
-        // Input-driven planar velocity
-        Vector3 wishMove = Vector3.zero;
+        // Build input wish direction (camera-relative, horizontal plane)
+        Vector3 wishdir = Vector3.zero;
         if (inputMagnitude > walkThreshold)
-            wishMove = (transform.right * horizontal + transform.forward * vertical).normalized * currentSpeed;
+            wishdir = (transform.right * horizontal + transform.forward * vertical).normalized;
 
-        // Gravity on full velocity
+        // Split velocity
+        Vector3 horiz = new Vector3(worldVel.x, 0f, worldVel.z);
+
+        if (isGrounded)
+        {
+            // Ground friction first
+            horiz = Vector3.MoveTowards(horiz, Vector3.zero, groundFriction * Time.deltaTime);
+
+            // Accelerate toward target ground speed
+            float wishspeed = currentSpeed;                 // walk/run speed from your state
+            Accelerate(ref horiz, wishdir, wishspeed, groundAcceleration);
+        }
+        else
+        {
+            // Light air drag on existing momentum
+            horiz *= Mathf.Clamp01(1f - airDrag * Time.deltaTime);
+
+            // Decide if the player is doing a pure strafe (A/D only) vs forward/back
+            bool pureStrafe = Mathf.Abs(horizontal) > 0f && Mathf.Abs(vertical) <= 0.0001f;
+
+            float wishspeed = currentSpeed; // use your run/walk value as intent speed
+            float cap = pureStrafe ? airStrafeMaxSpeed : airMaxSpeed;
+            if (wishspeed > cap) wishspeed = cap;
+
+            float accel = pureStrafe ? airStrafeAcceleration : airAcceleration;
+
+            // Air accelerate toward wishdir (adds speed in that direction up to the cap)
+            Accelerate(ref horiz, wishdir, wishspeed, accel);
+
+            // Allow bending the current horizontal velocity toward wishdir mid-air
+            AirControlTurn(ref horiz, wishdir, wishspeed);
+        }
+
+        // Recombine with vertical & apply gravity
+        worldVel = new Vector3(horiz.x, worldVel.y, horiz.z);
         worldVel.y += gravity * Time.deltaTime;
 
-        // Friction / drag on horizontal momentum
-        Vector3 horiz = new Vector3(worldVel.x, 0f, worldVel.z);
-        if (isGrounded)
-            horiz = Vector3.MoveTowards(horiz, Vector3.zero, groundFriction * Time.deltaTime);
-        else
-            horiz *= Mathf.Clamp01(1f - airDrag * Time.deltaTime);
-        worldVel = new Vector3(horiz.x, worldVel.y, horiz.z);
+        // ONE move
+        controller.Move(worldVel * Time.deltaTime);
 
-        // Single move
-        Vector3 motion = (wishMove + worldVel) * Time.deltaTime;
-        controller.Move(motion);
-
-        // Re-stick if we just landed
+        // Re-stick if grounded after move
         if (isGrounded && worldVel.y < 0f)
             worldVel.y = -2f;
     }
@@ -255,4 +283,33 @@ public class FirstPersonController : MonoBehaviour
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckDistance);
         }
     }
+    // Quake-like accelerate: pushes horizontal velocity toward wishdir at a rate (accel),
+    // capped by how much speed we're missing toward that direction.
+    void Accelerate(ref Vector3 horizVel, Vector3 wishdir, float wishspeed, float accel)
+    {
+        if (wishspeed <= 0f) return;
+        float currentspeed = Vector3.Dot(horizVel, wishdir);
+        float addspeed = wishspeed - currentspeed;
+        if (addspeed <= 0f) return;
+
+        float accelspeed = accel * Time.deltaTime * wishspeed;
+        if (accelspeed > addspeed) accelspeed = addspeed;
+
+        horizVel += wishdir * accelspeed;
+    }
+
+    // Optional “air control”: lets you bend your current horizontal velocity toward wishdir while airborne.
+    void AirControlTurn(ref Vector3 horizVel, Vector3 wishdir, float wishspeed)
+    {
+        if (airControl <= 0f || wishspeed <= 0f) return;
+        // Only when moving somewhat forward relative to wishdir
+        float proj = Vector3.Dot(horizVel.normalized, wishdir);
+        if (proj <= 0f) return;
+
+        // Nudge direction toward wishdir, roughly preserving magnitude
+        Vector3 newDir = Vector3.Slerp(horizVel.normalized, wishdir, airControl * Time.deltaTime);
+        float speed = horizVel.magnitude;
+        horizVel = newDir * speed;
+    }
+
 }

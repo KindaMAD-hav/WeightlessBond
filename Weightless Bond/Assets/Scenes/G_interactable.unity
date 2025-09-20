@@ -409,10 +409,16 @@ MonoBehaviour:
   playerMass: 80
   airDrag: 0.05
   groundFriction: 15
-  walkSpeed: 3
-  runSpeed: 6
-  jumpHeight: 1.5
-  gravity: -20
+  groundAcceleration: 80
+  airAcceleration: 18
+  airStrafeAcceleration: 80
+  airControl: 0.4
+  airMaxSpeed: 10
+  airStrafeMaxSpeed: 30
+  walkSpeed: 4
+  runSpeed: 8
+  jumpHeight: 1.6
+  gravity: -26
   groundCheckDistance: 1.11
   walkThreshold: 0.1
   runKey: 304
@@ -570,11 +576,11 @@ MonoBehaviour:
   holdDistance: 2.5
   minHoldDistance: 1.5
   maxHoldDistance: 4
-  positionStrength: 600
-  velocityDamping: 50
-  angularStrength: 50
+  positionStrength: 700
+  velocityDamping: 60
+  angularStrength: 60
   maxLinearSpeed: 1000
-  maxForce: 2000
+  maxForce: 2500
   throwForce: 20
   pickKey: 101
   dropKey: 113
@@ -1737,7 +1743,7 @@ MonoBehaviour:
   swaySmoothing: 4
   normalFOV: 90
   runningFOV: 100
-  fovTransitionSpeed: 2
+  fovTransitionSpeed: 5
   yawTarget: {fileID: 383160847}
 --- !u!1 &1831776077
 GameObject:
