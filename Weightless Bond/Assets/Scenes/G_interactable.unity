@@ -372,7 +372,7 @@ GameObject:
   - component: {fileID: 383160851}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -895,9 +895,33 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1766348431}
     m_Modifications:
+    - target: {fileID: -8599559244947218855, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7274503979954665845, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: -5609321221556402741, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
       propertyPath: m_Name
       value: fists_2023__first_person_animations
+      objectReference: {fileID: 0}
+    - target: {fileID: -4000455331563792920, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -2955364182494244310, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1466114387312693064, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -798398715581142817, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 790367847734253889, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
       propertyPath: m_DirtyAABB
@@ -955,6 +979,14 @@ PrefabInstance:
       propertyPath: m_AABB.m_Extent.z
       value: 0.079981685
       objectReference: {fileID: 0}
+    - target: {fileID: 4720945070656688660, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5105349769863819956, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5146681718063874739, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -995,9 +1027,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7683165113086612275, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: -8020435392893336985, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+    - {fileID: -4000455331563792920, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+    - {fileID: -7274503979954665845, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
+    - {fileID: 7683165113086612275, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: -5609321221556402741, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
@@ -1324,9 +1363,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68d72f27dd8676541be056310d93c84b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FirstPersonCamera
-  mouseSensitivity: 100
-  verticalSensitivity: 100
-  horizontalSensitivity: 100
+  maxDeltaPerFrame: 8
+  horizontalSensitivity: 5
+  verticalSensitivity: 5
   minVerticalAngle: -90
   maxVerticalAngle: 90
   enableHeadBob: 1
@@ -1336,9 +1375,10 @@ MonoBehaviour:
   enableSway: 1
   swayAmount: 0.02
   swaySmoothing: 4
-  normalFOV: 60
-  runningFOV: 70
+  normalFOV: 90
+  runningFOV: 100
   fovTransitionSpeed: 2
+  yawTarget: {fileID: 383160847}
 --- !u!1 &1831776077
 GameObject:
   m_ObjectHideFlags: 0

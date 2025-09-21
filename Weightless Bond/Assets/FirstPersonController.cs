@@ -104,35 +104,26 @@ public class FirstPersonController : MonoBehaviour
         // Ground check
         isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask);
 
-        if (isGrounded && velocity.y < 0)
-        {
-            velocity.y = -2f; // Small negative value to keep grounded
-        }
+        if (isGrounded && velocity.y < 0f)
+            velocity.y = -2f; // keep snapped to ground
 
-        // Movement
-        moveDirection = transform.right * horizontal + transform.forward * vertical;
-
-        // Only apply speed if we have input above threshold
+        // Planar input (only if above threshold)
+        Vector3 input = transform.right * horizontal + transform.forward * vertical;
         if (inputMagnitude > walkThreshold)
-        {
-            moveDirection = moveDirection.normalized * currentSpeed;
-        }
+            input = input.normalized * currentSpeed;
         else
-        {
-            moveDirection = Vector3.zero;
-        }
+            input = Vector3.zero;
 
-        controller.Move(moveDirection * Time.deltaTime);
-
-        // Jumping
+        // Jump
         if (Input.GetKeyDown(jumpKey) && isGrounded)
-        {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-        }
 
-        // Apply gravity
+        // Gravity
         velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+
+        // ONE move call
+        Vector3 motion = (input + new Vector3(0f, velocity.y, 0f)) * Time.deltaTime;
+        controller.Move(motion);
     }
 
     void HandleActions()
