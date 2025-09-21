@@ -11,7 +11,14 @@ public class G_Interactable : MonoBehaviour
     public bool allowRotation = true;
     public float maxPickupDistance = 8f;
     public float maxHoldDistance = 12f;
-    public float massClamp = 50f; // heavier objects harder to move
+    public float massClamp = 50f;
+
+    [Header("Throwback (player knockback tuning)")]
+    [Tooltip("If ON, use Rigidbody.mass for momentum transfer. If OFF, use Throwback Weight below.")]
+    public bool useMassForThrowback = true;
+
+    [Tooltip("Acts like a designer mass for player knockback when not using real mass.")]
+    public float throwbackWeight = 1f;
 
     void Awake()
     {
@@ -23,4 +30,8 @@ public class G_Interactable : MonoBehaviour
     {
         if (Highlighter) Highlighter.SetHighlighted(focused);
     }
+
+    // Effective 'mass' used for player knockback
+    public float GetThrowbackMassLike() =>
+        Mathf.Max(0.01f, useMassForThrowback ? Body.mass : throwbackWeight);
 }
