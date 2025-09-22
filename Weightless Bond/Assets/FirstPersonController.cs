@@ -4,48 +4,45 @@
 [RequireComponent(typeof(AudioSource))]
 public class FirstPersonController : MonoBehaviour
 {
-    // =================== Core Physics / Momentum ===================
+    // =================== Momentum / Gravity ===================
     [Header("Momentum / Gravity")]
-    [Tooltip("Effective mass used when AddImpulse(J) is called (e.g., throwback).")]
+    [Tooltip("Effective mass when AddImpulse(J) is called (e.g., throwback).")]
     public float playerMass = 80f;
-    [Tooltip("Gravity (negative). Applies to worldVel.y every frame.")]
+    [Tooltip("Gravity (negative). Applied to worldVel.y each frame.")]
     public float gravity = -26f;
 
-    // Entire player velocity in world space (used for gravity, impulses, air accel)
+    // Full player velocity in world space (used for gravity, impulses, air accel)
     private Vector3 worldVel;
 
-    // =================== Grounded Movement (definite speeds) ===================
-    [Header("Ground Movement (Definite Speeds)")]
+    // =================== Ground (definite speeds; no slide) ===================
+    [Header("Ground Movement (No Slide)")]
     public float walkSpeed = 4f;
     public float runSpeed = 8f;
 
-    [Tooltip("How fast horizontal velocity snaps to target on ground (m/s^2). Use big value for near-instant.")]
-    public float groundSnapAcceleration = 100f;
+    [Tooltip("How fast to snap to exact ground speed when input is present (m/s^2). Use high for near-instant.")]
+    public float groundSnapAcceleration = 200f;
 
-    [Tooltip("How fast we decelerate to zero on ground when no input (m/s^2).")]
-    public float groundDeceleration = 50f;
-
-    // =================== Jumping (impulse-based) ===================
+    // =================== Jump (impulse-based) ===================
     [Header("Jump (Impulse-Based)")]
-    [Tooltip("Vertical impulse applied to worldVel.y when jumping (m/s).")]
+    [Tooltip("Vertical impulse applied to worldVel.y (m/s).")]
     public float jumpImpulse = 7.5f;
 
-    [Tooltip("Extra forgiveness time after walking off edges.")]
+    [Tooltip("Grace time after walking off edges.")]
     public float coyoteTime = 0.10f;
 
-    [Tooltip("Buffer window that remembers a jump press slightly before landing.")]
+    [Tooltip("Remember a jump press slightly before landing.")]
     public float jumpBufferTime = 0.10f;
 
     private float coyoteTimer;
     private float jumpBufferTimer;
 
-    // =================== Air Control / Strafing ===================
-    [Header("Air Control (Strafing only while airborne)")]
+    // =================== Air Control / Strafing (air only) ===================
+    [Header("Air Control (air only)")]
     [Tooltip("Forward/back acceleration in air.")]
     public float airAcceleration = 16f;
     [Tooltip("Pure A/D strafe acceleration in air.")]
     public float airStrafeAcceleration = 80f;
-    [Tooltip("How well we can bend current velocity toward our wish direction.")]
+    [Tooltip("How well you can bend current velocity toward wish direction.")]
     public float airControl = 0.40f;
     [Tooltip("Max speed cap for forward/back air accel.")]
     public float airMaxSpeed = 10f;
@@ -54,10 +51,10 @@ public class FirstPersonController : MonoBehaviour
     [Tooltip("Tiny damping in air to curb infinite drift (0..1 per second).")]
     public float airDrag = 0.04f;
 
-    // =================== Input / Ground Check / Audio ===================
+    // =================== Ground Check / Input / Audio ===================
     [Header("Ground Check")]
-    public Transform groundCheck;           // marker near feet (for gizmo only)
-    public LayerMask groundMask = ~0;       // which layers count as ground
+    public Transform groundCheck;
+    public LayerMask groundMask = ~0;
     public float groundCheckDistance = 0.3f;
 
     [Header("States / Input")]
@@ -140,14 +137,14 @@ public class FirstPersonController : MonoBehaviour
     // ----------------------- MOVEMENT -----------------------
     void MovementUpdate()
     {
-        // Ground check (simple sphere at feet)
+        // Ground check
         isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask, QueryTriggerInteraction.Ignore);
 
-        // Coyote timer update
+        // Coyote timer
         if (isGrounded) coyoteTimer = coyoteTime;
         else coyoteTimer -= Time.deltaTime;
 
-        // Build input wishdir (camera-relative, XZ plane)
+        // Wishdir (camera-relative on XZ)
         Vector3 wishdir = Vector3.zero;
         if (inputMagnitude > walkThreshold)
             wishdir = (transform.right * horizontal + transform.forward * vertical).normalized;
@@ -160,20 +157,15 @@ public class FirstPersonController : MonoBehaviour
 
         if (isGrounded)
         {
-            // Deterministic ground motion:
-            // - Move horizontal speed toward exact target speed along wishdir
-            // - Decelerate toward 0 when no input
-            if (targetSpeed > 0f && wishdir.sqrMagnitude > 0.0f)
-            {
-                Vector3 targetVel = wishdir * targetSpeed;
-                horiz = Vector3.MoveTowards(horiz, targetVel, groundSnapAcceleration * Time.deltaTime);
-            }
-            else
-            {
-                horiz = Vector3.MoveTowards(horiz, Vector3.zero, groundDeceleration * Time.deltaTime);
-            }
+            // *** NO SLIDE RULES ***
+            // If you have input -> snap horizontal toward exact (wishdir * targetSpeed)
+            // If no input -> hard stop (0)
+            Vector3 targetVel = (targetSpeed > 0f && wishdir.sqrMagnitude > 0f) ? wishdir * targetSpeed : Vector3.zero;
 
-            // Jump if buffered and coyote time valid
+            // Snap with strong accel so it feels immediate but still stable
+            horiz = Vector3.MoveTowards(horiz, targetVel, groundSnapAcceleration * Time.deltaTime);
+
+            // Jump using impulse (consistent with throwback)
             if (jumpBufferTimer > 0f && coyoteTimer > 0f)
             {
                 worldVel.y = jumpImpulse;
@@ -183,10 +175,10 @@ public class FirstPersonController : MonoBehaviour
         }
         else
         {
-            // Air: light drag on existing horizontal
+            // Air: tiny damping on horizontal drift
             horiz *= Mathf.Clamp01(1f - airDrag * Time.deltaTime);
 
-            // Air acceleration (with pure A/D strafe detection)
+            // Air acceleration (A/D strafing only works here)
             bool pureStrafe = Mathf.Abs(horizontal) > 0f && Mathf.Abs(vertical) <= 0.0001f;
 
             float wishspeed = (isRunning ? runSpeed : walkSpeed);
@@ -206,7 +198,17 @@ public class FirstPersonController : MonoBehaviour
         // Single move
         controller.Move(worldVel * Time.deltaTime);
 
-        // Sticky ground fix after landing
+        // After landing, enforce no-slide immediately
+        if (!wasGroundedLastFrame && isGrounded)
+        {
+            // If you landed: set horizontal instantly based on current input
+            if (targetSpeed > 0f && wishdir.sqrMagnitude > 0f)
+                worldVel = new Vector3((wishdir * targetSpeed).x, worldVel.y, (wishdir * targetSpeed).z);
+            else
+                worldVel = new Vector3(0f, worldVel.y, 0f);
+        }
+
+        // Sticky ground protection
         if (isGrounded && worldVel.y < 0f)
             worldVel.y = -2f;
 
