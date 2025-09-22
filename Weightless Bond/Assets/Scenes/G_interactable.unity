@@ -409,7 +409,7 @@ MonoBehaviour:
   playerMass: 80
   airDrag: 0.05
   groundFriction: 15
-  groundAcceleration: 80
+  groundAcceleration: 10
   airAcceleration: 18
   airStrafeAcceleration: 80
   airControl: 0.4
