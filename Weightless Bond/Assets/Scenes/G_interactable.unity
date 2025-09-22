@@ -415,6 +415,8 @@ MonoBehaviour:
   airControl: 0.4
   airMaxSpeed: 10
   airStrafeMaxSpeed: 30
+  groundStrafeMultiplier: 0.3
+  airStrafeMultiplier: 0.9
   walkSpeed: 4
   runSpeed: 8
   jumpHeight: 1.6
