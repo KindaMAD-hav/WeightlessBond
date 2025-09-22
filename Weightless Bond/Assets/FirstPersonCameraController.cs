@@ -179,17 +179,21 @@ public class FirstPersonCamera : MonoBehaviour
 
     void HandleCursorToggle()
     {
-        // Optional: toggle with Esc
-        if (Input.GetKeyDown(KeyCode.Escape)) ToggleCursor();
-
-        bool isLocked = Cursor.lockState == CursorLockMode.Locked;
-        if (isLocked != wasLockedLastFrame)
+        // Press Esc to unlock
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
-            // Cursor state changed this frame; discard next mouse read
-            skipOneFrameMouse = true;
-            wasLockedLastFrame = isLocked;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        // Left click to relock
+        if (Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
     }
+
 
     public void ToggleCursor()
     {
