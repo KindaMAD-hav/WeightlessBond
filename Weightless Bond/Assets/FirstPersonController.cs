@@ -17,7 +17,7 @@ public class FirstPersonController : MonoBehaviour
     [Header("Air Accel / Strafe")]
     public float airAcceleration = 12f;          // forward/back while airborne
     public float airStrafeAcceleration = 50f;    // pure A/D strafing in air
-    public float airControl = 0.30f;             // how well you can “turn” your velocity mid-air (0..1)
+    public float airControl = 0.30f;             // how well you can "turn" your velocity mid-air (0..1)
     public float airMaxSpeed = 7f;               // cap for forward/back air acceleration
     public float airStrafeMaxSpeed = 30f;        // higher cap for pure strafe
 
@@ -42,14 +42,22 @@ public class FirstPersonController : MonoBehaviour
     public Transform groundCheck;
     public LayerMask groundMask = 1;
 
+    [Header("Combat Settings")]
+    public float punchRange = 2f;
+    public float punchDamage = 25f;
+    public LayerMask enemyLayerMask = 1 << 6; // Assuming enemies are on layer 6
+    public float punchCooldown = 0.5f;
+
     [Header("Audio")]
     public AudioClip[] footstepSounds;
     public float footstepInterval = 0.5f;
+    public AudioClip punchSound;
 
     // Components
     private CharacterController controller;
     private AudioSource audioSource;
     private PlayerAnimationController animationController;
+    private Camera playerCamera;
 
     // Movement variables
     private Vector3 velocity;
@@ -58,6 +66,9 @@ public class FirstPersonController : MonoBehaviour
     private bool isWalking;
     private float currentSpeed;
     private float inputMagnitude;
+
+    // Combat variables
+    private float lastPunchTime;
 
     // Audio variables
     private float footstepTimer;
@@ -72,6 +83,11 @@ public class FirstPersonController : MonoBehaviour
         controller = GetComponent<CharacterController>();
         audioSource = GetComponent<AudioSource>();
         animationController = GetComponentInChildren<PlayerAnimationController>();
+
+        // Get the camera (assuming it's a child of the player or tagged as MainCamera)
+        playerCamera = GetComponentInChildren<Camera>();
+        if (playerCamera == null)
+            playerCamera = Camera.main;
 
         // Lock and hide cursor
         Cursor.lockState = CursorLockMode.Locked;
@@ -99,7 +115,6 @@ public class FirstPersonController : MonoBehaviour
         // Δv = J / m
         worldVel += impulseWorld / Mathf.Max(0.01f, playerMass);
     }
-
 
     void HandleInput()
     {
@@ -186,7 +201,6 @@ public class FirstPersonController : MonoBehaviour
             worldVel.y = -2f;
     }
 
-
     void HandleActions()
     {
         if (Input.GetKeyDown(interactKey))
@@ -247,13 +261,50 @@ public class FirstPersonController : MonoBehaviour
 
     void PerformPunch()
     {
+        // Check cooldown
+        if (Time.time - lastPunchTime < punchCooldown)
+            return;
+
+        lastPunchTime = Time.time;
+
         if (animationController != null)
         {
             animationController.TriggerPunch();
         }
 
-        // Add your punch logic here
-        Debug.Log("Punch performed");
+        // Play punch sound
+        if (punchSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(punchSound, 0.8f);
+        }
+
+        // Perform raycast from camera center
+        Ray punchRay = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+
+        if (Physics.Raycast(punchRay, out RaycastHit hit, punchRange, enemyLayerMask))
+        {
+            // Check if we hit an enemy
+            EnemyAI enemy = hit.collider.GetComponent<EnemyAI>();
+            if (enemy != null)
+            {
+                // Deal damage to the enemy
+                enemy.TakeDamage(punchDamage);
+
+                // Optional: Add punch force/impulse to the enemy
+                Rigidbody enemyRb = hit.collider.GetComponent<Rigidbody>();
+                if (enemyRb != null)
+                {
+                    Vector3 punchForce = punchRay.direction * 5f; // Adjust force as needed
+                    enemyRb.AddForce(punchForce, ForceMode.Impulse);
+                }
+
+                Debug.Log($"Punched {enemy.name} for {punchDamage} damage!");
+            }
+        }
+        else
+        {
+            Debug.Log("Punch missed - no enemy in range");
+        }
     }
 
     void PerformInspect()
@@ -282,7 +333,16 @@ public class FirstPersonController : MonoBehaviour
             Gizmos.color = isGrounded ? Color.green : Color.red;
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckDistance);
         }
+
+        // Draw punch range
+        if (playerCamera != null)
+        {
+            Gizmos.color = Color.blue;
+            Vector3 punchDirection = playerCamera.transform.forward;
+            Gizmos.DrawRay(playerCamera.transform.position, punchDirection * punchRange);
+        }
     }
+
     // Quake-like accelerate: pushes horizontal velocity toward wishdir at a rate (accel),
     // capped by how much speed we're missing toward that direction.
     void Accelerate(ref Vector3 horizVel, Vector3 wishdir, float wishspeed, float accel)
@@ -298,7 +358,7 @@ public class FirstPersonController : MonoBehaviour
         horizVel += wishdir * accelspeed;
     }
 
-    // Optional “air control”: lets you bend your current horizontal velocity toward wishdir while airborne.
+    // Optional "air control": lets you bend your current horizontal velocity toward wishdir while airborne.
     void AirControlTurn(ref Vector3 horizVel, Vector3 wishdir, float wishspeed)
     {
         if (airControl <= 0f || wishspeed <= 0f) return;
@@ -311,5 +371,4 @@ public class FirstPersonController : MonoBehaviour
         float speed = horizVel.magnitude;
         horizVel = newDir * speed;
     }
-
 }
