@@ -43,13 +43,13 @@ public class FirstPersonController : MonoBehaviour
     [Tooltip("Pure A/D strafe acceleration in air.")]
     public float airStrafeAcceleration = 80f;
     [Tooltip("How well you can bend current velocity toward wish direction.")]
-    public float airControl = 0.40f;
+    [Range(0f, 1f)] public float airControl = 0.40f;
     [Tooltip("Max speed cap for forward/back air accel.")]
     public float airMaxSpeed = 10f;
     [Tooltip("Max speed cap for pure strafe (A/D) air accel.")]
     public float airStrafeMaxSpeed = 30f;
     [Tooltip("Tiny damping in air to curb infinite drift (0..1 per second).")]
-    public float airDrag = 0.04f;
+    [Range(0f, 1f)] public float airDrag = 0.04f;
 
     // =================== Ground Check / Input / Audio ===================
     [Header("Ground Check")]
@@ -65,14 +65,22 @@ public class FirstPersonController : MonoBehaviour
     public KeyCode punchKey = KeyCode.Mouse0;
     public KeyCode inspectKey = KeyCode.F;
 
+    [Header("Combat Settings")]
+    public float punchRange = 2f;
+    public float punchDamage = 25f;
+    public LayerMask enemyLayerMask = 1 << 6; // Assuming enemies are on layer 6
+    public float punchCooldown = 0.5f;
+
     [Header("Audio")]
     public AudioClip[] footstepSounds;
     public float footstepInterval = 0.5f;
+    public AudioClip punchSound;
 
     // Components
     private CharacterController controller;
     private AudioSource audioSource;
     private PlayerAnimationController animationController;
+    private Camera playerCamera;
 
     // State
     private bool isGrounded;
@@ -85,7 +93,8 @@ public class FirstPersonController : MonoBehaviour
     private float horizontal;
     private float vertical;
 
-    // Audio
+    // Combat/audio timers
+    private float lastPunchTime;
     private float footstepTimer;
 
     void Start()
@@ -94,6 +103,11 @@ public class FirstPersonController : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         animationController = GetComponentInChildren<PlayerAnimationController>();
 
+        // Get the camera (child first, fallback to MainCamera)
+        playerCamera = GetComponentInChildren<Camera>();
+        if (playerCamera == null) playerCamera = Camera.main;
+
+        // Lock and hide cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -138,7 +152,12 @@ public class FirstPersonController : MonoBehaviour
     void MovementUpdate()
     {
         // Ground check
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask, QueryTriggerInteraction.Ignore);
+        isGrounded = Physics.CheckSphere(
+            groundCheck.position,
+            groundCheckDistance,
+            groundMask,
+            QueryTriggerInteraction.Ignore
+        );
 
         // Coyote timer
         if (isGrounded) coyoteTimer = coyoteTime;
@@ -166,7 +185,7 @@ public class FirstPersonController : MonoBehaviour
             horiz = Vector3.MoveTowards(horiz, targetVel, groundSnapAcceleration * Time.deltaTime);
 
             // Jump using impulse (consistent with throwback)
-            if (jumpBufferTimer > 0f && coyoteTimer > 0f)
+            if (jumpBufferTimer > 0f && coyoteTimer > 0f && Input.GetKeyDown(jumpKey))
             {
                 worldVel.y = jumpImpulse;
                 jumpBufferTimer = 0f; // consume
@@ -247,9 +266,68 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
-    void PerformInteract() { if (animationController) animationController.TriggerInteract(); }
-    void PerformPunch() { if (animationController) animationController.TriggerPunch(); }
-    void PerformInspect() { if (animationController) animationController.TriggerInspect(); }
+    void PerformInteract()
+    {
+        if (animationController) animationController.TriggerInteract();
+        // Add your interaction logic here
+        Debug.Log("Interact performed");
+    }
+
+    void PerformPunch()
+    {
+        // Check cooldown
+        if (Time.time - lastPunchTime < punchCooldown)
+            return;
+
+        lastPunchTime = Time.time;
+
+        if (animationController != null)
+            animationController.TriggerPunch();
+
+        // Play punch sound
+        if (punchSound != null && audioSource != null)
+            audioSource.PlayOneShot(punchSound, 0.8f);
+
+        // Camera fallback safety
+        if (playerCamera == null) playerCamera = Camera.main;
+
+        // Perform raycast from camera center
+        Ray punchRay = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+
+        if (Physics.Raycast(punchRay, out RaycastHit hit, punchRange, enemyLayerMask))
+        {
+            // Check if we hit an enemy
+            EnemyAI enemy = hit.collider.GetComponent<EnemyAI>();
+            if (enemy != null)
+            {
+                // Deal damage to the enemy
+                enemy.TakeDamage(punchDamage);
+
+                // Optional: Add punch force/impulse to the enemy
+                Rigidbody enemyRb = hit.collider.GetComponent<Rigidbody>();
+                if (enemyRb != null)
+                {
+                    Vector3 punchForce = punchRay.direction * 5f; // Adjust force as needed
+                    enemyRb.AddForce(punchForce, ForceMode.Impulse);
+                }
+
+                Debug.Log($"Punched {enemy.name} for {punchDamage} damage!");
+            }
+        }
+        else
+        {
+            Debug.Log("Punch missed - no enemy in range");
+        }
+    }
+
+    void PerformInspect()
+    {
+        if (animationController != null)
+            animationController.TriggerInspect();
+
+        // Add your inspect logic here
+        Debug.Log("Inspect performed");
+    }
 
     // ----------------------- Public getters -----------------------
     public bool IsGrounded() => isGrounded;
@@ -289,11 +367,20 @@ public class FirstPersonController : MonoBehaviour
         horizVel = newDir * speed;
     }
 
-    // Debug gizmo for ground check
+    // Debug gizmos for ground and punch direction
     void OnDrawGizmosSelected()
     {
-        if (!groundCheck) return;
-        Gizmos.color = isGrounded ? Color.green : Color.red;
-        Gizmos.DrawWireSphere(groundCheck.position, groundCheckDistance);
+        if (groundCheck != null)
+        {
+            Gizmos.color = isGrounded ? Color.green : Color.red;
+            Gizmos.DrawWireSphere(groundCheck.position, groundCheckDistance);
+        }
+
+        if (playerCamera != null)
+        {
+            Gizmos.color = Color.blue;
+            Vector3 punchDirection = playerCamera.transform.forward;
+            Gizmos.DrawRay(playerCamera.transform.position, punchDirection * punchRange);
+        }
     }
 }
