@@ -53,9 +53,18 @@ public class FirstPersonController : MonoBehaviour
 
     // =================== Ground Check / Input / Audio ===================
     [Header("Ground Check")]
-    public Transform groundCheck;
-    public LayerMask groundMask = ~0;
+    public Transform groundCheck;           // kept for gizmo
+    public LayerMask groundMask = ~0;       // used only if anyColliderIsGround = false
     public float groundCheckDistance = 0.3f;
+
+    [Header("Grounding (walkable on ANY collider)")]
+    [Tooltip("If true, anything underfoot below slope limit counts as ground, not just Ground layer.")]
+    public bool anyColliderIsGround = true;
+    [Tooltip("Layers that should NEVER count as ground (e.g., Player, Enemies, Triggers).")]
+    public LayerMask neverGround = 0;
+    [Range(0.5f, 1f)] public float groundProbeRadiusScale = 0.95f;
+    [Tooltip("Extra cast distance below the capsule for the ground probe.")]
+    public float groundProbeExtra = 0.15f;
 
     [Header("States / Input")]
     public float walkThreshold = 0.1f;
@@ -151,13 +160,8 @@ public class FirstPersonController : MonoBehaviour
     // ----------------------- MOVEMENT -----------------------
     void MovementUpdate()
     {
-        // Ground check
-        isGrounded = Physics.CheckSphere(
-            groundCheck.position,
-            groundCheckDistance,
-            groundMask,
-            QueryTriggerInteraction.Ignore
-        );
+        // Layer-agnostic, slope-limited ground probe BEFORE movement
+        isGrounded = ProbeWalkableGround(out _);
 
         // Coyote timer
         if (isGrounded) coyoteTimer = coyoteTime;
@@ -177,11 +181,7 @@ public class FirstPersonController : MonoBehaviour
         if (isGrounded)
         {
             // *** NO SLIDE RULES ***
-            // If you have input -> snap horizontal toward exact (wishdir * targetSpeed)
-            // If no input -> hard stop (0)
             Vector3 targetVel = (targetSpeed > 0f && wishdir.sqrMagnitude > 0f) ? wishdir * targetSpeed : Vector3.zero;
-
-            // Snap with strong accel so it feels immediate but still stable
             horiz = Vector3.MoveTowards(horiz, targetVel, groundSnapAcceleration * Time.deltaTime);
 
             // Jump using impulse (consistent with throwback)
@@ -217,10 +217,16 @@ public class FirstPersonController : MonoBehaviour
         // Single move
         controller.Move(worldVel * Time.deltaTime);
 
+        // Backup: if CharacterController touched below, treat as grounded when walkable
+        if (!isGrounded && (controller.collisionFlags & CollisionFlags.Below) != 0)
+        {
+            if (ProbeWalkableGround(out _))
+                isGrounded = true;
+        }
+
         // After landing, enforce no-slide immediately
         if (!wasGroundedLastFrame && isGrounded)
         {
-            // If you landed: set horizontal instantly based on current input
             if (targetSpeed > 0f && wishdir.sqrMagnitude > 0f)
                 worldVel = new Vector3((wishdir * targetSpeed).x, worldVel.y, (wishdir * targetSpeed).z);
             else
@@ -334,7 +340,6 @@ public class FirstPersonController : MonoBehaviour
     public bool IsRunning() => isRunning;
     public bool IsWalking() => isWalking;
     public float GetInputMagnitude() => inputMagnitude;
-    public float GetMovementSpeed() => isRunning ? runSpeed : (isWalking ? walkSpeed : 0f);
     public Vector3 GetVelocity() => controller.velocity;
 
     // ----------------------- Helpers -----------------------
@@ -365,6 +370,23 @@ public class FirstPersonController : MonoBehaviour
         Vector3 newDir = Vector3.Slerp(horizVel.normalized, wishdir, airControl * Time.deltaTime);
         float speed = horizVel.magnitude;
         horizVel = newDir * speed;
+    }
+
+    // Probe for any walkable ground under the controller (layer-agnostic if enabled)
+    bool ProbeWalkableGround(out RaycastHit hit)
+    {
+        float radius = controller.radius * groundProbeRadiusScale;
+        Vector3 origin = controller.bounds.center + Vector3.up * 0.05f;
+        float castDist = controller.skinWidth + groundCheckDistance + groundProbeExtra;
+
+        int mask = anyColliderIsGround ? ~neverGround : groundMask;
+
+        if (Physics.SphereCast(origin, radius, Vector3.down, out hit, castDist, mask, QueryTriggerInteraction.Ignore))
+        {
+            float slope = Vector3.Angle(hit.normal, Vector3.up);
+            return slope <= controller.slopeLimit + 1f; // small tolerance
+        }
+        return false;
     }
 
     // Debug gizmos for ground and punch direction
