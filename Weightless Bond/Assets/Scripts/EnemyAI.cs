@@ -12,6 +12,10 @@ public class EnemyAI : MonoBehaviour
     public float attackCooldown = 2f;
     public float attackDamage = 20f;
 
+    [Header("Health Settings")]
+    public float maxHealth = 100f;
+    public float currentHealth;
+
     [Header("Movement Settings")]
     public float walkSpeed = 3.5f;
     public float runSpeed = 6f;
@@ -38,6 +42,9 @@ public class EnemyAI : MonoBehaviour
         // Get components
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
+
+        // Initialize health
+        currentHealth = maxHealth;
 
         // Find player if not assigned
         if (player == null)
@@ -158,12 +165,26 @@ public class EnemyAI : MonoBehaviour
     {
         if (isDead) return;
 
+        // Reduce health
+        currentHealth -= damage;
+        currentHealth = Mathf.Max(0f, currentHealth);
+
         // Trigger hit animation
         animator.SetTrigger(GET_HIT);
 
-        // You can add health system here
-        // For now, let's say enemy dies after being hit
-        Die();
+        // Become aware of player when hit
+        if (!hasTarget)
+        {
+            hasTarget = true;
+        }
+
+        Debug.Log($"{gameObject.name} took {damage} damage. Health: {currentHealth}/{maxHealth}");
+
+        // Check if enemy should die
+        if (currentHealth <= 0f)
+        {
+            Die();
+        }
     }
 
     public void Die()
@@ -184,8 +205,16 @@ public class EnemyAI : MonoBehaviour
         Collider col = GetComponent<Collider>();
         if (col != null) col.enabled = false;
 
+        Debug.Log($"{gameObject.name} has died!");
+
         // Optional: Destroy after animation
         Destroy(gameObject, 3f);
+    }
+
+    // Public method to get current health percentage (useful for UI)
+    public float GetHealthPercentage()
+    {
+        return currentHealth / maxHealth;
     }
 
     // Gizmos for debugging in Scene view
