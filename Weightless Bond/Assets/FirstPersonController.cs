@@ -4,43 +4,75 @@
 [RequireComponent(typeof(AudioSource))]
 public class FirstPersonController : MonoBehaviour
 {
-    [Header("Physics / Momentum")]
-    public float playerMass = 80f;     // effective mass for impulses
-    public float airDrag = 0.05f;      // 0..1 per second, tiny
-    public float groundFriction = 6f;  // how fast we bleed horizontal speed when grounded
+    // =================== Momentum / Gravity ===================
+    [Header("Momentum / Gravity")]
+    [Tooltip("Effective mass when AddImpulse(J) is called (e.g., throwback).")]
+    public float playerMass = 80f;
+    [Tooltip("Gravity (negative). Applied to worldVel.y each frame.")]
+    public float gravity = -26f;
 
-    private Vector3 worldVel;          // full velocity, includes impulses & gravity
+    // Full player velocity in world space (used for gravity, impulses, air accel)
+    private Vector3 worldVel;
 
-    [Header("Ground Accel")]
-    public float groundAcceleration = 50f;
+    // =================== Ground (definite speeds; no slide) ===================
+    [Header("Ground Movement (No Slide)")]
+    public float walkSpeed = 4f;
+    public float runSpeed = 8f;
 
-    [Header("Air Accel / Strafe")]
-    public float airAcceleration = 12f;          // forward/back while airborne
-    public float airStrafeAcceleration = 50f;    // pure A/D strafing in air
-    public float airControl = 0.30f;             // how well you can "turn" your velocity mid-air (0..1)
-    public float airMaxSpeed = 7f;               // cap for forward/back air acceleration
-    public float airStrafeMaxSpeed = 30f;        // higher cap for pure strafe
+    [Tooltip("How fast to snap to exact ground speed when input is present (m/s^2). Use high for near-instant.")]
+    public float groundSnapAcceleration = 200f;
 
-    [Header("Movement Settings")]
-    public float walkSpeed = 3f;
-    public float runSpeed = 6f;
-    public float jumpHeight = 1.5f;
-    public float gravity = -20f;
+    // =================== Jump (impulse-based) ===================
+    [Header("Jump (Impulse-Based)")]
+    [Tooltip("Vertical impulse applied to worldVel.y (m/s).")]
+    public float jumpImpulse = 7.5f;
+
+    [Tooltip("Grace time after walking off edges.")]
+    public float coyoteTime = 0.10f;
+
+    [Tooltip("Remember a jump press slightly before landing.")]
+    public float jumpBufferTime = 0.10f;
+
+    private float coyoteTimer;
+    private float jumpBufferTimer;
+
+    // =================== Air Control / Strafing (air only) ===================
+    [Header("Air Control (air only)")]
+    [Tooltip("Forward/back acceleration in air.")]
+    public float airAcceleration = 16f;
+    [Tooltip("Pure A/D strafe acceleration in air.")]
+    public float airStrafeAcceleration = 80f;
+    [Tooltip("How well you can bend current velocity toward wish direction.")]
+    [Range(0f, 1f)] public float airControl = 0.40f;
+    [Tooltip("Max speed cap for forward/back air accel.")]
+    public float airMaxSpeed = 10f;
+    [Tooltip("Max speed cap for pure strafe (A/D) air accel.")]
+    public float airStrafeMaxSpeed = 30f;
+    [Tooltip("Tiny damping in air to curb infinite drift (0..1 per second).")]
+    [Range(0f, 1f)] public float airDrag = 0.04f;
+
+    // =================== Ground Check / Input / Audio ===================
+    [Header("Ground Check")]
+    public Transform groundCheck;           // kept for gizmo
+    public LayerMask groundMask = ~0;       // used only if anyColliderIsGround = false
     public float groundCheckDistance = 0.3f;
 
-    [Header("Movement States")]
-    public float walkThreshold = 0.1f; // Minimum input to start walking
+    [Header("Grounding (walkable on ANY collider)")]
+    [Tooltip("If true, anything underfoot below slope limit counts as ground, not just Ground layer.")]
+    public bool anyColliderIsGround = true;
+    [Tooltip("Layers that should NEVER count as ground (e.g., Player, Enemies, Triggers).")]
+    public LayerMask neverGround = 0;
+    [Range(0.5f, 1f)] public float groundProbeRadiusScale = 0.95f;
+    [Tooltip("Extra cast distance below the capsule for the ground probe.")]
+    public float groundProbeExtra = 0.15f;
 
-    [Header("Input Settings")]
+    [Header("States / Input")]
+    public float walkThreshold = 0.1f;
     public KeyCode runKey = KeyCode.LeftShift;
     public KeyCode jumpKey = KeyCode.Space;
     public KeyCode interactKey = KeyCode.E;
     public KeyCode punchKey = KeyCode.Mouse0;
     public KeyCode inspectKey = KeyCode.F;
-
-    [Header("Ground Check")]
-    public Transform groundCheck;
-    public LayerMask groundMask = 1;
 
     [Header("Combat Settings")]
     public float punchRange = 2f;
@@ -59,24 +91,20 @@ public class FirstPersonController : MonoBehaviour
     private PlayerAnimationController animationController;
     private Camera playerCamera;
 
-    // Movement variables
-    private Vector3 velocity;
+    // State
     private bool isGrounded;
+    private bool wasGroundedLastFrame;
     private bool isRunning;
     private bool isWalking;
-    private float currentSpeed;
     private float inputMagnitude;
 
-    // Combat variables
-    private float lastPunchTime;
-
-    // Audio variables
-    private float footstepTimer;
-
-    // Input variables
+    // Input axes
     private float horizontal;
     private float vertical;
-    private Vector3 moveDirection;
+
+    // Combat/audio timers
+    private float lastPunchTime;
+    private float footstepTimer;
 
     void Start()
     {
@@ -84,108 +112,101 @@ public class FirstPersonController : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         animationController = GetComponentInChildren<PlayerAnimationController>();
 
-        // Get the camera (assuming it's a child of the player or tagged as MainCamera)
+        // Get the camera (child first, fallback to MainCamera)
         playerCamera = GetComponentInChildren<Camera>();
-        if (playerCamera == null)
-            playerCamera = Camera.main;
+        if (playerCamera == null) playerCamera = Camera.main;
 
         // Lock and hide cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
-        currentSpeed = walkSpeed;
     }
 
     void Update()
     {
-        HandleInput();
-        HandleMovement();
+        ReadInput();
+        MovementUpdate();
         HandleActions();
         HandleAudio();
 
-        // Send movement data to animation controller
         if (animationController != null)
-        {
             animationController.SetMovementData(inputMagnitude, isWalking, isRunning, isGrounded);
-        }
     }
 
+    // External impulse (e.g., from GravityHand throwback)
     public void AddImpulse(Vector3 impulseWorld)
     {
-        // Δv = J / m
         worldVel += impulseWorld / Mathf.Max(0.01f, playerMass);
     }
 
-    void HandleInput()
+    // ----------------------- INPUT -----------------------
+    void ReadInput()
     {
         horizontal = Input.GetAxis("Horizontal");
         vertical = Input.GetAxis("Vertical");
 
-        // Calculate input magnitude for movement states
-        Vector2 inputVector = new Vector2(horizontal, vertical);
-        inputMagnitude = Mathf.Clamp01(inputVector.magnitude);
+        Vector2 iv = new Vector2(horizontal, vertical);
+        inputMagnitude = Mathf.Clamp01(iv.magnitude);
 
-        // Determine movement states
         isRunning = Input.GetKey(runKey) && inputMagnitude > walkThreshold;
         isWalking = !isRunning && inputMagnitude > walkThreshold;
 
-        // Set current speed based on state
-        if (isRunning)
-            currentSpeed = runSpeed;
-        else if (isWalking)
-            currentSpeed = walkSpeed;
+        // Jump buffering
+        if (Input.GetKeyDown(jumpKey))
+            jumpBufferTimer = jumpBufferTime;
         else
-            currentSpeed = 0f;
+            jumpBufferTimer -= Time.deltaTime;
     }
 
-    void HandleMovement()
+    // ----------------------- MOVEMENT -----------------------
+    void MovementUpdate()
     {
-        // Ground check
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask);
+        // Layer-agnostic, slope-limited ground probe BEFORE movement
+        isGrounded = ProbeWalkableGround(out _);
 
-        // Jump
-        if (Input.GetKeyDown(jumpKey) && isGrounded)
-            worldVel.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        // Coyote timer
+        if (isGrounded) coyoteTimer = coyoteTime;
+        else coyoteTimer -= Time.deltaTime;
 
-        // Stick to ground when grounded & falling
-        if (isGrounded && worldVel.y < 0f)
-            worldVel.y = -2f;
-
-        // Build input wish direction (camera-relative, horizontal plane)
+        // Wishdir (camera-relative on XZ)
         Vector3 wishdir = Vector3.zero;
         if (inputMagnitude > walkThreshold)
             wishdir = (transform.right * horizontal + transform.forward * vertical).normalized;
 
-        // Split velocity
+        // Desired ground speed (definite)
+        float targetSpeed = isRunning ? runSpeed : (isWalking ? walkSpeed : 0f);
+
+        // Split current velocity
         Vector3 horiz = new Vector3(worldVel.x, 0f, worldVel.z);
 
         if (isGrounded)
         {
-            // Ground friction first
-            horiz = Vector3.MoveTowards(horiz, Vector3.zero, groundFriction * Time.deltaTime);
+            // *** NO SLIDE RULES ***
+            Vector3 targetVel = (targetSpeed > 0f && wishdir.sqrMagnitude > 0f) ? wishdir * targetSpeed : Vector3.zero;
+            horiz = Vector3.MoveTowards(horiz, targetVel, groundSnapAcceleration * Time.deltaTime);
 
-            // Accelerate toward target ground speed
-            float wishspeed = currentSpeed;                 // walk/run speed from your state
-            Accelerate(ref horiz, wishdir, wishspeed, groundAcceleration);
+            // Jump using impulse (consistent with throwback)
+            if (jumpBufferTimer > 0f && coyoteTimer > 0f && Input.GetKeyDown(jumpKey))
+            {
+                worldVel.y = jumpImpulse;
+                jumpBufferTimer = 0f; // consume
+                isGrounded = false;   // will be airborne after Move
+            }
         }
         else
         {
-            // Light air drag on existing momentum
+            // Air: tiny damping on horizontal drift
             horiz *= Mathf.Clamp01(1f - airDrag * Time.deltaTime);
 
-            // Decide if the player is doing a pure strafe (A/D only) vs forward/back
+            // Air acceleration (A/D strafing only works here)
             bool pureStrafe = Mathf.Abs(horizontal) > 0f && Mathf.Abs(vertical) <= 0.0001f;
 
-            float wishspeed = currentSpeed; // use your run/walk value as intent speed
+            float wishspeed = (isRunning ? runSpeed : walkSpeed);
             float cap = pureStrafe ? airStrafeMaxSpeed : airMaxSpeed;
             if (wishspeed > cap) wishspeed = cap;
 
             float accel = pureStrafe ? airStrafeAcceleration : airAcceleration;
 
-            // Air accelerate toward wishdir (adds speed in that direction up to the cap)
             Accelerate(ref horiz, wishdir, wishspeed, accel);
-
-            // Allow bending the current horizontal velocity toward wishdir mid-air
             AirControlTurn(ref horiz, wishdir, wishspeed);
         }
 
@@ -193,30 +214,38 @@ public class FirstPersonController : MonoBehaviour
         worldVel = new Vector3(horiz.x, worldVel.y, horiz.z);
         worldVel.y += gravity * Time.deltaTime;
 
-        // ONE move
+        // Single move
         controller.Move(worldVel * Time.deltaTime);
 
-        // Re-stick if grounded after move
+        // Backup: if CharacterController touched below, treat as grounded when walkable
+        if (!isGrounded && (controller.collisionFlags & CollisionFlags.Below) != 0)
+        {
+            if (ProbeWalkableGround(out _))
+                isGrounded = true;
+        }
+
+        // After landing, enforce no-slide immediately
+        if (!wasGroundedLastFrame && isGrounded)
+        {
+            if (targetSpeed > 0f && wishdir.sqrMagnitude > 0f)
+                worldVel = new Vector3((wishdir * targetSpeed).x, worldVel.y, (wishdir * targetSpeed).z);
+            else
+                worldVel = new Vector3(0f, worldVel.y, 0f);
+        }
+
+        // Sticky ground protection
         if (isGrounded && worldVel.y < 0f)
             worldVel.y = -2f;
+
+        wasGroundedLastFrame = isGrounded;
     }
 
+    // ----------------------- ACTIONS / AUDIO -----------------------
     void HandleActions()
     {
-        if (Input.GetKeyDown(interactKey))
-        {
-            PerformInteract();
-        }
-
-        if (Input.GetKeyDown(punchKey))
-        {
-            PerformPunch();
-        }
-
-        if (Input.GetKeyDown(inspectKey))
-        {
-            PerformInspect();
-        }
+        if (Input.GetKeyDown(interactKey)) PerformInteract();
+        if (Input.GetKeyDown(punchKey)) PerformPunch();
+        if (Input.GetKeyDown(inspectKey)) PerformInspect();
     }
 
     void HandleAudio()
@@ -224,19 +253,14 @@ public class FirstPersonController : MonoBehaviour
         if (isGrounded && (isWalking || isRunning))
         {
             footstepTimer += Time.deltaTime;
-
-            float currentFootstepInterval = isRunning ? footstepInterval * 0.6f : footstepInterval;
-
-            if (footstepTimer >= currentFootstepInterval)
+            float stepInt = isRunning ? footstepInterval * 0.6f : footstepInterval;
+            if (footstepTimer >= stepInt)
             {
                 PlayFootstepSound();
                 footstepTimer = 0f;
             }
         }
-        else
-        {
-            footstepTimer = 0f;
-        }
+        else footstepTimer = 0f;
     }
 
     void PlayFootstepSound()
@@ -250,11 +274,7 @@ public class FirstPersonController : MonoBehaviour
 
     void PerformInteract()
     {
-        if (animationController != null)
-        {
-            animationController.TriggerInteract();
-        }
-
+        if (animationController) animationController.TriggerInteract();
         // Add your interaction logic here
         Debug.Log("Interact performed");
     }
@@ -268,15 +288,14 @@ public class FirstPersonController : MonoBehaviour
         lastPunchTime = Time.time;
 
         if (animationController != null)
-        {
             animationController.TriggerPunch();
-        }
 
         // Play punch sound
         if (punchSound != null && audioSource != null)
-        {
             audioSource.PlayOneShot(punchSound, 0.8f);
-        }
+
+        // Camera fallback safety
+        if (playerCamera == null) playerCamera = Camera.main;
 
         // Perform raycast from camera center
         Ray punchRay = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
@@ -310,44 +329,25 @@ public class FirstPersonController : MonoBehaviour
     void PerformInspect()
     {
         if (animationController != null)
-        {
             animationController.TriggerInspect();
-        }
 
         // Add your inspect logic here
         Debug.Log("Inspect performed");
     }
 
-    // Public methods for external access
+    // ----------------------- Public getters -----------------------
     public bool IsGrounded() => isGrounded;
     public bool IsRunning() => isRunning;
     public bool IsWalking() => isWalking;
     public float GetInputMagnitude() => inputMagnitude;
-    public float GetMovementSpeed() => currentSpeed;
     public Vector3 GetVelocity() => controller.velocity;
 
-    void OnDrawGizmosSelected()
-    {
-        if (groundCheck != null)
-        {
-            Gizmos.color = isGrounded ? Color.green : Color.red;
-            Gizmos.DrawWireSphere(groundCheck.position, groundCheckDistance);
-        }
-
-        // Draw punch range
-        if (playerCamera != null)
-        {
-            Gizmos.color = Color.blue;
-            Vector3 punchDirection = playerCamera.transform.forward;
-            Gizmos.DrawRay(playerCamera.transform.position, punchDirection * punchRange);
-        }
-    }
-
-    // Quake-like accelerate: pushes horizontal velocity toward wishdir at a rate (accel),
-    // capped by how much speed we're missing toward that direction.
+    // ----------------------- Helpers -----------------------
+    // Quake-like accelerate in air toward wishdir up to wishspeed.
     void Accelerate(ref Vector3 horizVel, Vector3 wishdir, float wishspeed, float accel)
     {
-        if (wishspeed <= 0f) return;
+        if (wishspeed <= 0f || wishdir.sqrMagnitude < 1e-6f) return;
+
         float currentspeed = Vector3.Dot(horizVel, wishdir);
         float addspeed = wishspeed - currentspeed;
         if (addspeed <= 0f) return;
@@ -358,17 +358,51 @@ public class FirstPersonController : MonoBehaviour
         horizVel += wishdir * accelspeed;
     }
 
-    // Optional "air control": lets you bend your current horizontal velocity toward wishdir while airborne.
+    // Turn existing horizontal velocity toward wishdir mid-air.
     void AirControlTurn(ref Vector3 horizVel, Vector3 wishdir, float wishspeed)
     {
         if (airControl <= 0f || wishspeed <= 0f) return;
-        // Only when moving somewhat forward relative to wishdir
+        if (horizVel.sqrMagnitude < 1e-6f || wishdir.sqrMagnitude < 1e-6f) return;
+
         float proj = Vector3.Dot(horizVel.normalized, wishdir);
         if (proj <= 0f) return;
 
-        // Nudge direction toward wishdir, roughly preserving magnitude
         Vector3 newDir = Vector3.Slerp(horizVel.normalized, wishdir, airControl * Time.deltaTime);
         float speed = horizVel.magnitude;
         horizVel = newDir * speed;
+    }
+
+    // Probe for any walkable ground under the controller (layer-agnostic if enabled)
+    bool ProbeWalkableGround(out RaycastHit hit)
+    {
+        float radius = controller.radius * groundProbeRadiusScale;
+        Vector3 origin = controller.bounds.center + Vector3.up * 0.05f;
+        float castDist = controller.skinWidth + groundCheckDistance + groundProbeExtra;
+
+        int mask = anyColliderIsGround ? ~neverGround : groundMask;
+
+        if (Physics.SphereCast(origin, radius, Vector3.down, out hit, castDist, mask, QueryTriggerInteraction.Ignore))
+        {
+            float slope = Vector3.Angle(hit.normal, Vector3.up);
+            return slope <= controller.slopeLimit + 1f; // small tolerance
+        }
+        return false;
+    }
+
+    // Debug gizmos for ground and punch direction
+    void OnDrawGizmosSelected()
+    {
+        if (groundCheck != null)
+        {
+            Gizmos.color = isGrounded ? Color.green : Color.red;
+            Gizmos.DrawWireSphere(groundCheck.position, groundCheckDistance);
+        }
+
+        if (playerCamera != null)
+        {
+            Gizmos.color = Color.blue;
+            Vector3 punchDirection = playerCamera.transform.forward;
+            Gizmos.DrawRay(playerCamera.transform.position, punchDirection * punchRange);
+        }
     }
 }
