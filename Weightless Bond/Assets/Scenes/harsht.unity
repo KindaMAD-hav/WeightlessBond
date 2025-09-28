@@ -1626,7 +1626,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ad28a235984c0f643983d47a39337d86, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -106.94
+      value: -106.65
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ad28a235984c0f643983d47a39337d86, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1660,6 +1660,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: GamemapR6
       objectReference: {fileID: 0}
+    - target: {fileID: 4245125855718461755, guid: ad28a235984c0f643983d47a39337d86, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 46980f1476bb87e459dcf8c8b6c725fa, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
