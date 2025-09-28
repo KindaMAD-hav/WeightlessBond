@@ -195,8 +195,8 @@ MonoBehaviour:
   enableSway: 1
   swayAmount: 0.02
   swaySmoothing: 4
-  normalFOV: 90
-  runningFOV: 100
+  normalFOV: 70
+  runningFOV: 80
   fovTransitionSpeed: 5
   yawTarget: {fileID: 5573580697401710149}
 --- !u!1 &7366897467854999410
@@ -244,6 +244,7 @@ GameObject:
   - component: {fileID: 8534113316184284922}
   - component: {fileID: 278319698575709458}
   - component: {fileID: 282811687263653554}
+  - component: {fileID: 4261333749787763757}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -424,7 +425,7 @@ MonoBehaviour:
   anyColliderIsGround: 1
   neverGround:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   groundProbeRadiusScale: 0.95
   groundProbeExtra: 0.15
   walkThreshold: 0.1
@@ -434,10 +435,10 @@ MonoBehaviour:
   punchKey: 323
   inspectKey: 102
   punchRange: 2
-  punchDamage: 25
+  punchDamage: 100
   enemyLayerMask:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 320
   punchCooldown: 0.5
   footstepSounds: []
   footstepInterval: 0.5
@@ -505,6 +506,24 @@ MonoBehaviour:
   respawnOnDeath: 1
   respawnDelay: 3
   respawnPoint: {fileID: 0}
+--- !u!114 &4261333749787763757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9217990419361027767}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37a0ad0561277a6448c0f6c1954f7311, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  cam: {fileID: 6239742082444320484}
+  interactableMask:
+    serializedVersion: 2
+    m_Bits: 64
+  interactRange: 5
+  interactIcon: {fileID: 0}
 --- !u!1001 &4967888242840467642
 PrefabInstance:
   m_ObjectHideFlags: 0
