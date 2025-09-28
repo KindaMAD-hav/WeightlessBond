@@ -3884,17 +3884,21 @@ PrefabInstance:
       propertyPath: healthBar
       value: 
       objectReference: {fileID: 1051189780}
+    - target: {fileID: 4261333749787763757, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: interactIcon
+      value: 
+      objectReference: {fileID: 1324346673}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.82
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -5.32
+      value: 7.16
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.67
+      value: -60.6
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3924,22 +3928,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8534113316184284922, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
-      propertyPath: punchDamage
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 8534113316184284922, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
-      propertyPath: enemyLayerMask.m_Bits
-      value: 320
-      objectReference: {fileID: 0}
-    - target: {fileID: 9175798008499868658, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
-      propertyPath: normalFOV
-      value: 70
-      objectReference: {fileID: 0}
-    - target: {fileID: 9175798008499868658, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
-      propertyPath: runningFOV
-      value: 80
-      objectReference: {fileID: 0}
     - target: {fileID: 9217990419361027767, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_Name
       value: Player (1)
@@ -3947,10 +3935,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 9217990419361027767, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1386421454}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
 --- !u!4 &495861654 stripped
 Transform:
@@ -4430,7 +4415,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2275963121610365527, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
       propertyPath: m_Name
-      value: G_test (4)
+      value: Umbrella
       objectReference: {fileID: 0}
     - target: {fileID: 3603035889459224607, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
       propertyPath: throwbackWeight
@@ -4440,6 +4425,10 @@ PrefabInstance:
       propertyPath: highlightUI
       value: 
       objectReference: {fileID: 1324346673}
+    - target: {fileID: 7507946783009305083, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
+      propertyPath: m_Constraints
+      value: 112
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9985,29 +9974,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 9048297584703763815, guid: f28d96b8e43d2ad4bb5d17e59d886e3f, type: 3}
---- !u!1 &1386421448 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 9217990419361027767, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
-  m_PrefabInstance: {fileID: 495861653}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1386421454
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1386421448}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 37a0ad0561277a6448c0f6c1954f7311, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  cam: {fileID: 2014779075}
-  interactableMask:
-    serializedVersion: 2
-    m_Bits: 64
-  interactRange: 5
-  interactIcon: {fileID: 1324346673}
 --- !u!1 &1391627948
 GameObject:
   m_ObjectHideFlags: 0
@@ -15377,11 +15343,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 732578618237115366, guid: f28d96b8e43d2ad4bb5d17e59d886e3f, type: 3}
---- !u!20 &2014779075 stripped
-Camera:
-  m_CorrespondingSourceObject: {fileID: 6239742082444320484, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
-  m_PrefabInstance: {fileID: 495861653}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2029273770
 PrefabInstance:
   m_ObjectHideFlags: 0
