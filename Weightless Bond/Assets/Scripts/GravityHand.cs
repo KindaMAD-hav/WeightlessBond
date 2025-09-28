@@ -1,5 +1,4 @@
-﻿// GravityHand.cs
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 
 public class GravityHand : MonoBehaviour
@@ -17,29 +16,27 @@ public class GravityHand : MonoBehaviour
     public float holdDistance = 3f, minHoldDistance = 1f, maxHoldDistance = 10f;
     public float positionStrength = 600f, velocityDamping = 50f, angularStrength = 50f;
     public float maxLinearSpeed = 20f, maxForce = 2000f;
-    public float throwForce = 20f; // Δv magnitude when using VelocityChange
+    public float throwForce = 20f;
 
     [Header("Controls")]
     public KeyCode pickKey = KeyCode.E, dropKey = KeyCode.Q;
-    public KeyCode throwKey = KeyCode.Mouse0;          // LMB: object only
-    public KeyCode throwAndSelfKey = KeyCode.Mouse1;   // RMB: object + player momentum
+    public KeyCode throwKey = KeyCode.Mouse0;
+    public KeyCode throwAndSelfKey = KeyCode.Mouse1;
     public KeyCode rotateHoldKey = KeyCode.R;
     public float mouseRotateSpeed = 6f, scrollDistanceStep = 0.5f;
 
     G_Interactable _aimed, _held;
     Quaternion _heldTargetRot;
-    FirstPersonController _player;   // for AddImpulse
+    FirstPersonController _player;
 
-    // Cache player colliders + currently ignored pairs
     private Collider[] _playerColliders;
     private readonly List<(Collider a, Collider b)> _ignored = new();
 
     void Awake()
     {
         if (!cam) cam = Camera.main;
-        _player = GetComponentInParent<FirstPersonController>(); // ensure throwback works
+        _player = GetComponentInParent<FirstPersonController>();
 
-        // Grab ALL colliders on the player (CharacterController is a Collider too)
         _playerColliders = GetComponentInParent<Collider>()
             ? GetComponentsInParent<Collider>()
             : new Collider[0];
@@ -74,19 +71,35 @@ public class GravityHand : MonoBehaviour
             holdDistance = Mathf.Clamp(holdDistance + scroll * scrollDistanceStep, minHoldDistance, maxHoldDistance);
         holdPoint.localPosition = new Vector3(0, 0, holdDistance);
 
-        // Pick/drop
+        // --- Interaction Handling ---
         if (Input.GetKeyDown(pickKey))
         {
+            // First check for switches
+            if (_held == null)
+            {
+                if (Physics.Raycast(cam.ViewportPointToRay(new Vector3(0.5f, 0.5f)), out RaycastHit hit, maxRayDistance, interactableMask))
+                {
+                    var resetSwitch = hit.collider.GetComponentInParent<ResetSwitch>();
+                    if (resetSwitch != null)
+                    {
+                        resetSwitch.ActivateSwitch();
+                        return; // don't try to grab object in the same frame
+                    }
+                }
+            }
+
+            // Otherwise handle pickup/drop
             if (_held == null && _aimed != null) TryPickup(_aimed);
             else if (_held != null) Drop();
         }
+
         if (Input.GetKeyDown(dropKey)) Drop();
 
         // Throws
         if (Input.GetKeyDown(throwKey)) ThrowObjectOnly();
         if (Input.GetKeyDown(throwAndSelfKey)) ThrowWithMomentumTransfer();
 
-        // Rotate held object while R is held
+        // Rotate held object
         if (_held != null && Input.GetKey(rotateHoldKey) && _held.allowRotation)
         {
             float yaw = Input.GetAxis("Mouse X") * mouseRotateSpeed;
@@ -103,7 +116,7 @@ public class GravityHand : MonoBehaviour
 
         rb.useGravity = false;
 
-        // Position follow (PID-ish)
+        // Position follow
         Vector3 targetPos = holdPoint.position;
         Vector3 toTarget = targetPos - rb.worldCenterOfMass;
 
@@ -126,6 +139,7 @@ public class GravityHand : MonoBehaviour
         }
     }
 
+    // --- Helpers ---
     void BeginIgnorePlayerCollisions(G_Interactable gi)
     {
         if (_playerColliders == null || _playerColliders.Length == 0) return;
@@ -174,8 +188,8 @@ public class GravityHand : MonoBehaviour
         _held = gi;
         var rb = gi.Body;
         rb.useGravity = false;
-        rb.linearDamping = 0f;           // fixed (was linearDamping)
-        rb.angularDamping = 0.05f; // fixed (was angularDamping)
+        rb.linearDamping = 0f;
+        rb.angularDamping = 0.05f;
         _heldTargetRot = rb.rotation;
 
         BeginIgnorePlayerCollisions(gi);
@@ -209,12 +223,12 @@ public class GravityHand : MonoBehaviour
         var rb = _held.Body;
         rb.useGravity = true;
 
-        // 1) Give object Δv (VelocityChange)
+        // 1) Give object Δv
         Vector3 deltaV = cam.transform.forward * throwForce;
         rb.AddForce(deltaV, ForceMode.VelocityChange);
 
         // 2) Equal & opposite impulse to player
-        float mEff = _held.GetThrowbackMassLike(); // mass or designer weight
+        float mEff = _held.GetThrowbackMassLike();
         Vector3 J = mEff * deltaV;
         if (_player != null) _player.AddImpulse(-J);
 
