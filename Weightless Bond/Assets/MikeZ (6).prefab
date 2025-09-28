@@ -59,7 +59,7 @@ PrefabInstance:
     - target: {fileID: 5866666021909216657, guid: 047630ac047d4114cb615a194fa76a68, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: c0fef19e9c0fb0b488e3d7cd0d73207e, type: 2}
+      objectReference: {fileID: 9100000, guid: 1f46fd05d41115449907fe6d26cc99c0, type: 2}
     - target: {fileID: 8964349870460937754, guid: 047630ac047d4114cb615a194fa76a68, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -67,5 +67,63 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 047630ac047d4114cb615a194fa76a68, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1906351215931842009}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 047630ac047d4114cb615a194fa76a68, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -8268170580909358556}
   m_SourcePrefab: {fileID: 100100000, guid: 047630ac047d4114cb615a194fa76a68, type: 3}
+--- !u!1 &2305574832992631296 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 047630ac047d4114cb615a194fa76a68, type: 3}
+  m_PrefabInstance: {fileID: 1386657652453803857}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1906351215931842009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2305574832992631296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56db3d5dd8d01274395fed1d53683f8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAI
+  detectionRange: 10
+  attackRange: 2
+  loseTargetRange: 15
+  attackCooldown: 2
+  attackDamage: 20
+  maxHealth: 100
+  currentHealth: 0
+  walkSpeed: 3.5
+  runSpeed: 6
+  player: {fileID: 0}
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 1
+--- !u!195 &-8268170580909358556
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2305574832992631296}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
