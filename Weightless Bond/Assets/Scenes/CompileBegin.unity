@@ -7154,6 +7154,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6041410391933582987, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 7295378662531559135, guid: 41ed7c12afec764499abb3c71b488501, type: 3}
     - target: {fileID: 6742478540476534556, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -57707,6 +57711,7 @@ MonoBehaviour:
   newMaterial: {fileID: 2100000, guid: 7f92626552a94b2489b4cc2601b0b2d1, type: 2}
   interactDistance: 5
   interactionKey: 101
+  spinSpeed: 145.5
 --- !u!135 &5146681718709270331
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -57726,8 +57731,8 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.295601
-  m_Center: {x: -0.09, y: -0.37, z: 1.1440709}
+  m_Radius: 0.26246157
+  m_Center: {x: -0.0008097401, y: -0.37000003, z: 1.2001209}
 --- !u!1 &5148871512206627292
 GameObject:
   m_ObjectHideFlags: 0

@@ -11,22 +11,22 @@ public class RaycastMaterialChanger : MonoBehaviour
     [Header("Settings")]
     public float interactDistance = 5f;
     public KeyCode interactionKey = KeyCode.E;
-    public float spinSpeed = 180f;        // How fast it spins before disappearing
-    public float disappearDelay = 2f;     // Time in seconds before disappearing
+    public float spinSpeed = 90f;         // How fast the interactable spins
 
     private bool isInteracted = false;
 
     void Update()
     {
+        // Keep spinning until interacted
+        if (!isInteracted && interactableObject != null)
+        {
+            interactableObject.transform.Rotate(Vector3.up, spinSpeed * Time.deltaTime, Space.World);
+        }
+
+        // Check for interaction
         if (Input.GetKeyDown(interactionKey))
         {
             TryInteract();
-        }
-
-        // If interacted, spin the object until it disappears
-        if (isInteracted && interactableObject != null)
-        {
-            interactableObject.transform.Rotate(Vector3.up, spinSpeed * Time.deltaTime, Space.World);
         }
     }
 
@@ -46,26 +46,11 @@ public class RaycastMaterialChanger : MonoBehaviour
                 targetRenderer.material = newMaterial;
                 Debug.Log("Material changed on: " + targetRenderer.gameObject.name);
 
-                // Start spinning & disappear countdown
-                if (!isInteracted)
-                {
-                    isInteracted = true;
-                    Invoke(nameof(RemoveInteractable), disappearDelay);
-                }
+                // Immediately remove interactable
+                isInteracted = true;
+                Destroy(interactableObject);
+                Debug.Log("Interactable disappeared!");
             }
-            else
-            {
-                Debug.Log("Looked at " + hit.collider.name + " but it's not the interactable object.");
-            }
-        }
-    }
-
-    void RemoveInteractable()
-    {
-        if (interactableObject != null)
-        {
-            Destroy(interactableObject); // Or use: interactableObject.SetActive(false);
-            Debug.Log("Interactable disappeared!");
         }
     }
 
