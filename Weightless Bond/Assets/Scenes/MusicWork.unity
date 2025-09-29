@@ -1274,6 +1274,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!4 &203758009 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2270527894554814814, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
@@ -3485,9 +3491,19 @@ MonoBehaviour:
   button: {fileID: 444357241}
   pressDepth: 0.2
   pressSpeed: 5
+  pressCooldown: 0.15
   door: {fileID: 249985243403887012}
   raiseAmount: 5
   raiseSpeed: 2
+  impactSpeedThreshold: 3
+  momentumThreshold: 2
+  requireGInteractable: 0
+  allowedLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  playDoorSfx: 1
+  doorOpenSfx: {fileID: 0}
+  doorSfxVolume: 1
 --- !u!64 &456278235
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -3938,6 +3954,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!1001 &495861653
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4581,6 +4603,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!1001 &580905655
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4666,6 +4694,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!4 &580905664 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2270527894554814814, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
@@ -4810,6 +4844,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!4 &601165099 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2270527894554814814, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
@@ -5029,6 +5069,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   targetObject: {fileID: 1668498942}
+  pressDepth: 0.05
+  pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
+  sfxVolume: 1
 --- !u!135 &683401301
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -6447,6 +6492,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   targetObject: {fileID: 203758002}
+  pressDepth: 0.05
+  pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
+  sfxVolume: 1
 --- !u!135 &921863211
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -7078,6 +7128,15 @@ MonoBehaviour:
   massClamp: 50
   useMassForThrowback: 1
   throwbackWeight: 2.16
+  killOnImpact: 1
+  impactSpeedThreshold: 5
+  damagePerUnitSpeed: 2
+  maxImpactDamage: 50
+  armingDelay: 0.12
+  perTargetCooldown: 0.15
+  scaleDamageByMass: 0
+  IsHeld: 0
+  LastReleaseTime: -999
 --- !u!54 &1013570582
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -7571,6 +7630,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   targetObject: {fileID: 1992421934}
+  pressDepth: 0.05
+  pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
+  sfxVolume: 1
 --- !u!135 &1062139605
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -8770,6 +8834,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   targetObject: {fileID: 2029273772}
+  pressDepth: 0.05
+  pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
+  sfxVolume: 1
 --- !u!135 &1237559913
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -9308,6 +9377,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!4 &1317574164 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2270527894554814814, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
@@ -10279,6 +10354,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   targetObject: {fileID: 1787845296}
+  pressDepth: 0.05
+  pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
+  sfxVolume: 1
 --- !u!1 &1410365889 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 661634262256977423, guid: 6da0711993d33d1498b0c243051d23a4, type: 3}
@@ -10459,6 +10539,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!4 &1448367379 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2270527894554814814, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
@@ -10702,6 +10788,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   targetObject: {fileID: 601165092}
+  pressDepth: 0.05
+  pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
+  sfxVolume: 1
 --- !u!135 &1494877723
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -11435,6 +11526,9 @@ MonoBehaviour:
   targetObject: {fileID: 6931292283668629055}
   raiseAmount: 5
   raiseSpeed: 2
+  playDoorSfx: 1
+  doorOpenSfx: {fileID: 0}
+  doorSfxVolume: 1
 --- !u!1 &1555133212
 GameObject:
   m_ObjectHideFlags: 0
@@ -12194,6 +12288,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!4 &1668498949 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2270527894554814814, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
@@ -12528,6 +12628,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   targetObject: {fileID: 580905657}
+  pressDepth: 0.05
+  pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
+  sfxVolume: 1
 --- !u!135 &1750550066
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -12800,6 +12905,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!1 &1774527375 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -5023359606608136905, guid: 725f19c3b079e7642aa55cab5192686a, type: 3}
@@ -13348,6 +13459,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   targetObject: {fileID: 1448367372}
+  pressDepth: 0.05
+  pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
+  sfxVolume: 1
 --- !u!1001 &1783877744
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13455,6 +13571,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!4 &1787845303 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2270527894554814814, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
@@ -14749,6 +14871,9 @@ MonoBehaviour:
   targetObject: {fileID: 6931292282557073185}
   raiseAmount: 5
   raiseSpeed: 2
+  playDoorSfx: 1
+  doorOpenSfx: {fileID: 0}
+  doorSfxVolume: 1
 --- !u!114 &1932819832
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14823,6 +14948,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!4 &1968130720 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2270527894554814814, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
@@ -14967,6 +15098,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!4 &1992421941 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2270527894554814814, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
@@ -15298,6 +15435,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7754023cce6e56458814fdb06c72c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  useLocalSpace: 0
+  disableCollidersDuringReset: 1
+  settleFixedSteps: 1
+  wakeWithGravity: 1
+  nudgeDown: 1
+  downwardVelocity: 0.5
 --- !u!4 &2029273779 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2270527894554814814, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
@@ -15654,6 +15797,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   targetObject: {fileID: 491674718}
+  pressDepth: 0.05
+  pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
+  sfxVolume: 1
 --- !u!135 &2083072352
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -24719,6 +24867,9 @@ MonoBehaviour:
   - {fileID: 358881633}
   - {fileID: 1436526153}
   - {fileID: 1189340790}
+  playDoorSfx: 1
+  doorOpenSfx: {fileID: 0}
+  doorSfxVolume: 1
 --- !u!23 &5453069743752724606
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -30575,6 +30726,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   playerCamera: {fileID: 2035944734}
+  isFinalCutscene: 0
+  finalSceneName: MainMenu
+  finalCutsceneDelay: 12
 --- !u!1 &8629960966037315374
 GameObject:
   m_ObjectHideFlags: 0
