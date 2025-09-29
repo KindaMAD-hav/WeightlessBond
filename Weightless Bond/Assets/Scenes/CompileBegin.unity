@@ -4769,16 +4769,28 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1324346673}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -2.96
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -3.77
+      value: 8.94
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -58.27
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalRotation.w
@@ -4807,6 +4819,10 @@ PrefabInstance:
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9217990419361027767, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_Name
@@ -15166,10 +15182,13 @@ MonoBehaviour:
   raiseAmount: 5
   raiseSpeed: 2
   playDoorSfx: 1
-  doorOpenSfx: {fileID: 0}
-  doorOpenVolume: 1
+  doorOpenSfx: {fileID: 8300000, guid: 5e25b5fa75a01a0448dde55425ee94a3, type: 3}
+  doorOpenVolume: 0.3
   secondSfx: {fileID: 0}
   secondSfxVolume: 1
+  preloadClipsOnStart: 1
+  secondSfxOnDoorComplete: 1
+  debugLogs: 1
 --- !u!82 &1550843821
 AudioSource:
   m_ObjectHideFlags: 0
@@ -19778,6 +19797,9 @@ MonoBehaviour:
   doorOpenVolume: 0.4
   secondSfx: {fileID: 8300000, guid: 03629a11a05d54e419add4ee2dc39ffe, type: 3}
   secondSfxVolume: 2
+  preloadClipsOnStart: 1
+  secondSfxOnDoorComplete: 1
+  debugLogs: 1
 --- !u!82 &1932819832
 AudioSource:
   m_ObjectHideFlags: 0
