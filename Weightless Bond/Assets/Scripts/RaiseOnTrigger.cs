@@ -12,8 +12,14 @@ public class RaiseOnTrigger : MonoBehaviour
 
     [Header("Audio Settings")]
     public bool playDoorSfx = true;
+
+    [Tooltip("First sound when door starts opening")]
     public AudioClip doorOpenSfx;
-    [Range(0f, 1f)] public float doorSfxVolume = 1f;
+    [Range(0f, 1f)] public float doorOpenVolume = 1f;
+
+    [Tooltip("Second sound after first finishes")]
+    public AudioClip secondSfx;
+    [Range(0f, 2f)] public float secondSfxVolume = 1f;
 
     private Vector3 startPos;
     private Vector3 targetPos;
@@ -62,12 +68,31 @@ public class RaiseOnTrigger : MonoBehaviour
 
             Debug.Log($"{targetObject.name} is opening smoothly!");
 
-            // Play SFX once when door starts opening
-            if (playDoorSfx && doorOpenSfx != null)
+            if (playDoorSfx)
             {
-                audioSource.volume = doorSfxVolume;
-                audioSource.PlayOneShot(doorOpenSfx, doorSfxVolume);
+                // Play first clip and then queue the second
+                if (doorOpenSfx != null)
+                {
+                    audioSource.volume = doorOpenVolume;
+                    audioSource.PlayOneShot(doorOpenSfx, doorOpenVolume);
+
+                    if (secondSfx != null)
+                        StartCoroutine(PlaySecondSfxAfterDelay(doorOpenSfx.length));
+                }
+                else if (secondSfx != null) // if only second assigned
+                {
+                    audioSource.volume = secondSfxVolume;
+                    audioSource.PlayOneShot(secondSfx, secondSfxVolume);
+                }
             }
         }
+    }
+
+    private System.Collections.IEnumerator PlaySecondSfxAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        audioSource.volume = secondSfxVolume;
+        audioSource.PlayOneShot(secondSfx, secondSfxVolume);
     }
 }
