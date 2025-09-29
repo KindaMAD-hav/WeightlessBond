@@ -43,6 +43,16 @@ public class SphereSpawner : MonoBehaviour
     // Optimization: Cache frequently used values
     private float spawnRateReciprocal; // Store 1/spawnRate to avoid division
 
+    [Header("Audio")]
+    public AudioClip spawnSound;
+    [Range(0.5f, 2f)] public float pitchMin = 0.9f;
+    [Range(0.5f, 2f)] public float pitchMax = 1.1f;
+    [Tooltip("Play the spawn sound once per this many spawned spheres (e.g. 10 = play once every 10 spawns).")]
+    public int playEveryNSpawns = 1;  // default = play every spawn
+
+    private AudioSource audioSource;
+    private int spawnCountSinceLastSound = 0;
+
     void Start()
     {
         // Cache our position
@@ -53,6 +63,11 @@ public class SphereSpawner : MonoBehaviour
 
         // Find player once at start
         FindPlayer();
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
     }
 
     void Update()
@@ -183,6 +198,19 @@ public class SphereSpawner : MonoBehaviour
         {
             // Fallback: track by lifetime if no FallingSphere component
             StartCoroutine(TrackSphereLifetime(sphere, 10f));
+        }
+
+        // Increment spawn counter
+        spawnCountSinceLastSound++;
+
+        if (spawnSound != null && audioSource != null && playEveryNSpawns > 0)
+        {
+            if (spawnCountSinceLastSound >= playEveryNSpawns)
+            {
+                audioSource.pitch = Random.Range(pitchMin, pitchMax);
+                audioSource.PlayOneShot(spawnSound);
+                spawnCountSinceLastSound = 0; // reset counter
+            }
         }
 
         Debug.Log($"Spawned falling sphere at {spawnPos} (Active: {currentActiveSpheres}/{maxActiveSpheres})");
