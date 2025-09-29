@@ -18255,7 +18255,9 @@ MonoBehaviour:
   raiseSpeed: 2
   playDoorSfx: 1
   doorOpenSfx: {fileID: 0}
-  doorSfxVolume: 1
+  doorOpenVolume: 1
+  secondSfx: {fileID: 0}
+  secondSfxVolume: 1
 --- !u!82 &1550843821
 AudioSource:
   m_ObjectHideFlags: 0
@@ -23709,7 +23711,9 @@ MonoBehaviour:
   raiseSpeed: 2
   playDoorSfx: 1
   doorOpenSfx: {fileID: 8300000, guid: 5e25b5fa75a01a0448dde55425ee94a3, type: 3}
-  doorSfxVolume: 1
+  doorOpenVolume: 1
+  secondSfx: {fileID: 8300000, guid: 03629a11a05d54e419add4ee2dc39ffe, type: 3}
+  secondSfxVolume: 2
 --- !u!82 &1932819832
 AudioSource:
   m_ObjectHideFlags: 0
