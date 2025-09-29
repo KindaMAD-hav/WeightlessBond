@@ -3955,6 +3955,10 @@ PrefabInstance:
       propertyPath: highlightUI
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 6973523646097456976, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: -6316380684548963999, guid: 725f19c3b079e7642aa55cab5192686a, type: 3}
     - target: {fileID: 7507946783009305083, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
       propertyPath: m_Constraints
       value: 112
@@ -5679,6 +5683,10 @@ PrefabInstance:
       propertyPath: highlightUI
       value: 
       objectReference: {fileID: 1324346673}
+    - target: {fileID: 6973523646097456976, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: -6316380684548963999, guid: 6da0711993d33d1498b0c243051d23a4, type: 3}
     - target: {fileID: 7507946783009305083, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
       propertyPath: m_Constraints
       value: 112
