@@ -1,9 +1,3 @@
-// Highlighter.cs
-// URP-friendly emission highlighter with debug toggle & context menu.
-// - Add to any interactable (or let G_Interactable add it).
-// - Call SetHighlighted(true) each frame while aimed.
-// - Or tick "Debug Highlight" in the Inspector to test without gameplay code.
-
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -14,118 +8,93 @@ public class Highlighter : MonoBehaviour
     [SerializeField] private Renderer[] renderers;
 
     [Header("Appearance")]
-    [Tooltip("Emission color when highlighted (intensity > 1 looks brighter).")]
-    [ColorUsage(showAlpha: true, hdr: true)]
-    [SerializeField] private Color onColor = new Color(0.3f, 0.7f, 1f, 1f) * 2f;
+    [Tooltip("Material to use while highlighted.")]
+    [SerializeField] private Material highlightMaterial;
 
-    [Tooltip("How fast the highlight fades in/out.")]
-    [SerializeField, Range(1f, 30f)] private float fadeSpeed = 12f;
+    private Material[][] originalMaterials; // store original per renderer
+    private bool isHighlighted = false;
 
     [Header("Debug")]
     [Tooltip("When checked, stays highlighted in Play Mode without any other script.")]
     [SerializeField] private bool debugHighlight = false;
-
-    // Shader property name (URP/Lit uses _EmissionColor)
-    [SerializeField, Tooltip("Shader emission color property.")]
-    private string emissionColorName = "_EmissionColor";
-
-    // Internals
-    private MaterialPropertyBlock _mpb;
-    private float _current;  // 0..1 current visual intensity
-    private float _target;   // 0..1 desired intensity for this frame
 
     void Awake()
     {
         if (renderers == null || renderers.Length == 0)
             renderers = GetComponentsInChildren<Renderer>(includeInactive: false);
 
-        _mpb = new MaterialPropertyBlock();
-
-        // Ensure emission keyword is present on the shared material asset (prevents strip issues).
-        foreach (var r in renderers)
+        // Save original materials
+        originalMaterials = new Material[renderers.Length][];
+        for (int i = 0; i < renderers.Length; i++)
         {
-            if (!r) continue;
-            var mats = r.sharedMaterials; // use shared to avoid making runtime instances
-            foreach (var m in mats)
-            {
-                if (!m) continue;
-                m.EnableKeyword("_EMISSION");              // keep the variant
-                if (m.HasProperty("_EmissionColor"))
-                    m.SetColor("_EmissionColor", Color.black); // neutral at startup
-            }
+            if (renderers[i] != null)
+                originalMaterials[i] = renderers[i].materials;
         }
-
-        ApplyEmission(0f, forceAll: true);
     }
-
 
     void Update()
     {
-        // If in debug mode, force target on.
-        if (debugHighlight) _target = 1f;
+        if (debugHighlight)
+        {
+            SetHighlighted(true);
+        }
+        else if (!isHighlighted)
+        {
+            // Ensure reverted if no one called SetHighlighted this frame
+            SetHighlighted(false);
+        }
 
-        // Smooth step toward target
-        _current = Mathf.MoveTowards(_current, _target, fadeSpeed * Time.deltaTime);
-
-        // Apply and then reset target so other scripts must call SetHighlighted(true) each frame
-        ApplyEmission(_current, forceAll: false);
-        _target = 0f; // IMPORTANT: resets unless someone calls SetHighlighted(true) again this frame
+        isHighlighted = false; // reset, must be re-enabled each frame
     }
 
-    /// <summary>
-    /// Request highlight this frame. Call every frame while aimed/selected.
-    /// </summary>
+    /// <summary>Call this every frame while aimed/selected.</summary>
     public void SetHighlighted(bool on)
     {
-        if (on) _target = 1f;
-        // we don't set target to 0 here; leaving Update() to decay naturally
+        if (on)
+        {
+            ApplyHighlight();
+            isHighlighted = true;
+        }
+        else
+        {
+            RestoreOriginal();
+        }
     }
 
-    /// <summary>
-    /// Immediately forces highlight ON for quick testing (Inspector context menu).
-    /// </summary>
     [ContextMenu("Force Highlight On")]
     private void ForceOn()
     {
-        _current = 1f;
-        _target = 1f;
-        ApplyEmission(_current, forceAll: true);
+        ApplyHighlight();
+        isHighlighted = true;
     }
 
-    /// <summary>
-    /// Immediately forces highlight OFF for quick testing (Inspector context menu).
-    /// </summary>
     [ContextMenu("Force Highlight Off")]
     private void ForceOff()
     {
-        _current = 0f;
-        _target = 0f;
-        ApplyEmission(_current, forceAll: true);
+        RestoreOriginal();
+        isHighlighted = false;
     }
 
-    private void ApplyEmission(float t, bool forceAll)
+    private void ApplyHighlight()
     {
-        // Lerp from black (off) to the chosen onColor
-        Color c = Color.Lerp(Color.black, onColor, t);
+        if (highlightMaterial == null) return;
 
         foreach (var r in renderers)
         {
             if (!r) continue;
-            r.GetPropertyBlock(_mpb);
-            _mpb.SetColor(emissionColorName, c);
-            r.SetPropertyBlock(_mpb);
+            var mats = new Material[r.materials.Length];
+            for (int i = 0; i < mats.Length; i++)
+                mats[i] = highlightMaterial;
+            r.materials = mats;
         }
+    }
 
-        // Optionally push once more in case some renderers were missing a block
-        if (forceAll)
+    private void RestoreOriginal()
+    {
+        for (int i = 0; i < renderers.Length; i++)
         {
-            foreach (var r in renderers)
-            {
-                if (!r) continue;
-                r.GetPropertyBlock(_mpb);
-                _mpb.SetColor(emissionColorName, c);
-                r.SetPropertyBlock(_mpb);
-            }
+            if (renderers[i] != null && originalMaterials[i] != null)
+                renderers[i].materials = originalMaterials[i];
         }
     }
 }
