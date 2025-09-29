@@ -18648,6 +18648,18 @@ PrefabInstance:
       propertyPath: interactIcon
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 4261333749787763757, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: interactIcon1
+      value: 
+      objectReference: {fileID: 1372909851}
+    - target: {fileID: 4261333749787763757, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: interactIcon2
+      value: 
+      objectReference: {fileID: 1683724451}
+    - target: {fileID: 4261333749787763757, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: interactIcon3
+      value: 
+      objectReference: {fileID: 1068779504}
     - target: {fileID: 4851069975193698688, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_RenderPostProcessing
       value: 1
