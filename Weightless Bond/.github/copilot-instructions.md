@@ -2,7 +2,7 @@
 - Project name: Weightless Bond
 - Unity version: Unity 6000.2.2f1
 - Active game object:
-  - Name: Door_Frame_Square.001
-  - Tag: Untagged
-  - Layer: Default
+  - Name: G_test (4)
+  - Tag: Interactable
+  - Layer: Interactable
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

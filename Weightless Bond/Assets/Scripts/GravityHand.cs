@@ -116,7 +116,7 @@ public class GravityHand : MonoBehaviour
 
         rb.useGravity = false;
 
-        // Position follow
+        // Position follow (note: your project uses custom damping fields)
         Vector3 targetPos = holdPoint.position;
         Vector3 toTarget = targetPos - rb.worldCenterOfMass;
 
@@ -192,6 +192,7 @@ public class GravityHand : MonoBehaviour
         rb.angularDamping = 0.05f;
         _heldTargetRot = rb.rotation;
 
+        gi.IsHeld = true;                 // <-- mark as held
         BeginIgnorePlayerCollisions(gi);
     }
 
@@ -200,8 +201,11 @@ public class GravityHand : MonoBehaviour
         if (_held == null) return;
         var rb = _held.Body;
         rb.useGravity = true;
-        _held = null;
 
+        _held.IsHeld = false;             // <-- no longer held
+        _held.LastReleaseTime = Time.time;
+
+        _held = null;
         EndIgnorePlayerCollisions();
     }
 
@@ -211,8 +215,11 @@ public class GravityHand : MonoBehaviour
         var rb = _held.Body;
         rb.useGravity = true;
         rb.AddForce(cam.transform.forward * throwForce * Mathf.Clamp(rb.mass, 0.5f, 5f), ForceMode.VelocityChange);
-        _held = null;
 
+        _held.IsHeld = false;             // <-- mark released (armed after delay)
+        _held.LastReleaseTime = Time.time;
+
+        _held = null;
         EndIgnorePlayerCollisions();
     }
 
@@ -231,6 +238,9 @@ public class GravityHand : MonoBehaviour
         float mEff = _held.GetThrowbackMassLike();
         Vector3 J = mEff * deltaV;
         if (_player != null) _player.AddImpulse(-J);
+
+        _held.IsHeld = false;             // <-- mark released (armed after delay)
+        _held.LastReleaseTime = Time.time;
 
         _held = null;
         EndIgnorePlayerCollisions();

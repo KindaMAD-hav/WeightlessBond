@@ -4643,15 +4643,15 @@ PrefabInstance:
       objectReference: {fileID: 1324346673}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 13.88
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 43.52
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -107.69
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalRotation.w
@@ -9321,6 +9321,14 @@ MonoBehaviour:
   massClamp: 50
   useMassForThrowback: 1
   throwbackWeight: 2.16
+  impactSpeedThreshold: 5
+  damagePerUnitSpeed: 2
+  maxImpactDamage: 50
+  armingDelay: 0.12
+  perTargetCooldown: 0.15
+  scaleDamageByMass: 0
+  IsHeld: 0
+  LastReleaseTime: -999
 --- !u!54 &1013570582
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -24405,7 +24413,7 @@ MonoBehaviour:
   - {fileID: 1436526153}
   - {fileID: 1189340790}
   playDoorSfx: 1
-  doorOpenSfx: {fileID: 0}
+  doorOpenSfx: {fileID: 8300000, guid: 5e25b5fa75a01a0448dde55425ee94a3, type: 3}
   doorSfxVolume: 1
 --- !u!23 &5453069743752724606
 MeshRenderer:
