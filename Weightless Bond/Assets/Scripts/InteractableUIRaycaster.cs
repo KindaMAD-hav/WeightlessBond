@@ -14,9 +14,12 @@ public class InteractableUIRaycaster : MonoBehaviour
 
     [Header("Audio")]
     public AudioClip appearSound;
+    [Range(0f, 2f)]
+    [Tooltip("Volume multiplier for appear sound. 1 = normal, 2 = double loudness.")]
+    public float appearVolume = 1f;
 
     private AudioSource audioSource;
-    private bool wasVisible = false;         // tracks per-frame visibility
+    private bool wasVisible = false;             // tracks per-frame visibility
     private bool hasPlayedOnceThisScene = false; // ensures one-time play per scene load
 
     void Start()
@@ -42,7 +45,9 @@ public class InteractableUIRaycaster : MonoBehaviour
             {
                 if (!hasPlayedOnceThisScene && audioSource != null && appearSound != null)
                 {
-                    audioSource.PlayOneShot(appearSound);
+                    // Clamp final volume so it never exceeds 2.0
+                    float finalVolume = Mathf.Clamp01(audioSource.volume) * appearVolume;
+                    audioSource.PlayOneShot(appearSound, finalVolume);
                     hasPlayedOnceThisScene = true; // lock for the rest of the scene
                 }
             }

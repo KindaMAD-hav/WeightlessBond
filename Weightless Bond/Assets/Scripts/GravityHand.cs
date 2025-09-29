@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
+[RequireComponent(typeof(AudioSource))]
 public class GravityHand : MonoBehaviour
 {
     [Header("Refs")]
@@ -25,12 +27,22 @@ public class GravityHand : MonoBehaviour
     public KeyCode rotateHoldKey = KeyCode.R;
     public float mouseRotateSpeed = 6f, scrollDistanceStep = 0.5f;
 
+    [Header("Audio (Pickup Once Per Scene)")]
+    public bool enablePickupSfx = true;
+    public AudioClip pickupSfx;
+    [Range(0f, 2f)] public float pickupVolume = 1f;
+
     G_Interactable _aimed, _held;
     Quaternion _heldTargetRot;
     FirstPersonController _player;
 
+    private AudioSource _audio;
     private Collider[] _playerColliders;
     private readonly List<(Collider a, Collider b)> _ignored = new();
+
+    // Global per-scene latch
+    private static int s_lastSceneIndex = -1;
+    private static bool s_pickupPlayedThisScene = false;
 
     void Awake()
     {
@@ -40,6 +52,18 @@ public class GravityHand : MonoBehaviour
         _playerColliders = GetComponentInParent<Collider>()
             ? GetComponentsInParent<Collider>()
             : new Collider[0];
+
+        _audio = GetComponent<AudioSource>();
+        _audio.playOnAwake = false;
+        _audio.loop = false;
+
+        // Reset the latch when scene changes
+        var idx = SceneManager.GetActiveScene().buildIndex;
+        if (idx != s_lastSceneIndex)
+        {
+            s_lastSceneIndex = idx;
+            s_pickupPlayedThisScene = false;
+        }
     }
 
     void OnDisable() => EndIgnorePlayerCollisions();
@@ -116,7 +140,7 @@ public class GravityHand : MonoBehaviour
 
         rb.useGravity = false;
 
-        // Position follow (note: your project uses custom damping fields)
+        // Position follow
         Vector3 targetPos = holdPoint.position;
         Vector3 toTarget = targetPos - rb.worldCenterOfMass;
 
@@ -192,8 +216,15 @@ public class GravityHand : MonoBehaviour
         rb.angularDamping = 0.05f;
         _heldTargetRot = rb.rotation;
 
-        gi.IsHeld = true;                 // <-- mark as held
+        gi.IsHeld = true;
         BeginIgnorePlayerCollisions(gi);
+
+        // ---- Play pickup SFX once per scene ----
+        if (enablePickupSfx && !s_pickupPlayedThisScene && pickupSfx != null)
+        {
+            _audio.PlayOneShot(pickupSfx, Mathf.Clamp01(_audio.volume) * pickupVolume);
+            s_pickupPlayedThisScene = true;
+        }
     }
 
     void Drop()
@@ -202,7 +233,7 @@ public class GravityHand : MonoBehaviour
         var rb = _held.Body;
         rb.useGravity = true;
 
-        _held.IsHeld = false;             // <-- no longer held
+        _held.IsHeld = false;
         _held.LastReleaseTime = Time.time;
 
         _held = null;
@@ -216,7 +247,7 @@ public class GravityHand : MonoBehaviour
         rb.useGravity = true;
         rb.AddForce(cam.transform.forward * throwForce * Mathf.Clamp(rb.mass, 0.5f, 5f), ForceMode.VelocityChange);
 
-        _held.IsHeld = false;             // <-- mark released (armed after delay)
+        _held.IsHeld = false;
         _held.LastReleaseTime = Time.time;
 
         _held = null;
@@ -239,7 +270,7 @@ public class GravityHand : MonoBehaviour
         Vector3 J = mEff * deltaV;
         if (_player != null) _player.AddImpulse(-J);
 
-        _held.IsHeld = false;             // <-- mark released (armed after delay)
+        _held.IsHeld = false;
         _held.LastReleaseTime = Time.time;
 
         _held = null;

@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections;
-using Debug = UnityEngine.Debug;   // <-- add this line
+using Debug = UnityEngine.Debug;   // keep this alias
 
 public class BGMHandler : MonoBehaviour
 {
@@ -14,6 +14,10 @@ public class BGMHandler : MonoBehaviour
     [Header("Settings")]
     public float fadeDuration = 2f; // seconds for crossfade
     public AudioClip defaultTrack;  // starting track
+
+    [Range(0f, 1f)]
+    [Tooltip("Maximum allowed volume for all background music.")]
+    public float maxVolume = 0.25f;
 
     private Coroutine fadeCoroutine;
 
@@ -43,7 +47,7 @@ public class BGMHandler : MonoBehaviour
         {
             activeSource.clip = defaultTrack;
             activeSource.loop = true;
-            activeSource.volume = 1f;
+            activeSource.volume = maxVolume;
             activeSource.Play();
         }
     }
@@ -78,7 +82,7 @@ public class BGMHandler : MonoBehaviour
             float t = time / fadeDuration;
 
             activeSource.volume = Mathf.Lerp(startVolActive, 0f, t);
-            inactiveSource.volume = Mathf.Lerp(startVolInactive, 1f, t);
+            inactiveSource.volume = Mathf.Lerp(startVolInactive, maxVolume, t);
 
             yield return null;
         }
@@ -89,7 +93,7 @@ public class BGMHandler : MonoBehaviour
         activeSource = inactiveSource;
         inactiveSource = temp;
 
-        activeSource.volume = 1f;
+        activeSource.volume = maxVolume;
         inactiveSource.volume = 0f;
 
         fadeCoroutine = null;
