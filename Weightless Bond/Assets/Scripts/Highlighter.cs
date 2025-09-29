@@ -41,22 +41,23 @@ public class Highlighter : MonoBehaviour
 
         _mpb = new MaterialPropertyBlock();
 
-        // Ensure emission is enabled on all materials (URP strips otherwise)
+        // Ensure emission keyword is present on the shared material asset (prevents strip issues).
         foreach (var r in renderers)
         {
             if (!r) continue;
-            // Using .materials here is fine in editor; at runtime this creates instances.
-            // We only need to ensure the keyword once; subsequent frames use MPB.
-            foreach (var m in r.materials)
+            var mats = r.sharedMaterials; // use shared to avoid making runtime instances
+            foreach (var m in mats)
             {
                 if (!m) continue;
-                m.EnableKeyword("_EMISSION");
+                m.EnableKeyword("_EMISSION");              // keep the variant
+                if (m.HasProperty("_EmissionColor"))
+                    m.SetColor("_EmissionColor", Color.black); // neutral at startup
             }
         }
 
-        // Start fully off
         ApplyEmission(0f, forceAll: true);
     }
+
 
     void Update()
     {
