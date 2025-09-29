@@ -7,6 +7,7 @@ public class RaycastMaterialChanger : MonoBehaviour
     public GameObject interactableObject; // The object player interacts with
     public Renderer targetRenderer;       // The object whose material will change
     public Material newMaterial;          // The new material to apply
+    public MonoBehaviour scriptToEnable;  // The script you want enabled after interaction
 
     [Header("Settings")]
     public float interactDistance = 5f;
@@ -14,6 +15,13 @@ public class RaycastMaterialChanger : MonoBehaviour
     public float spinSpeed = 90f;         // How fast the interactable spins
 
     private bool isInteracted = false;
+
+    void Start()
+    {
+        // Make sure the extra script starts disabled
+        if (scriptToEnable != null)
+            scriptToEnable.enabled = false;
+    }
 
     void Update()
     {
@@ -50,6 +58,13 @@ public class RaycastMaterialChanger : MonoBehaviour
                 isInteracted = true;
                 Destroy(interactableObject);
                 Debug.Log("Interactable disappeared!");
+
+                // Enable the script
+                if (scriptToEnable != null)
+                {
+                    scriptToEnable.enabled = true;
+                    Debug.Log("Script enabled: " + scriptToEnable.GetType().Name);
+                }
             }
         }
     }

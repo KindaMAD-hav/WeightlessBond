@@ -18426,6 +18426,17 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -4094109638684184937, guid: 6da0711993d33d1498b0c243051d23a4, type: 3}
+--- !u!114 &1441031464 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 278319698575709458, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+  m_PrefabInstance: {fileID: 495861653}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 980b653e79a4e7344b5782e04c4c0102, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GravityHand
 --- !u!1 &1448367364 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2275963121610365527, guid: c3c9996a137bd2247a2aaeada78feb1b, type: 3}
@@ -57709,6 +57720,7 @@ MonoBehaviour:
   interactableObject: {fileID: 3614050815742472257}
   targetRenderer: {fileID: 1746576577}
   newMaterial: {fileID: 2100000, guid: 7f92626552a94b2489b4cc2601b0b2d1, type: 2}
+  scriptToEnable: {fileID: 1441031464}
   interactDistance: 5
   interactionKey: 101
   spinSpeed: 145.5
