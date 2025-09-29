@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class RaiseOnTrigger : MonoBehaviour
 {
     [Header("Target Object to Move")]
@@ -9,10 +10,17 @@ public class RaiseOnTrigger : MonoBehaviour
     public float raiseAmount = 5f;
     public float raiseSpeed = 2f; // units per second
 
+    [Header("Audio Settings")]
+    public bool playDoorSfx = true;
+    public AudioClip doorOpenSfx;
+    [Range(0f, 1f)] public float doorSfxVolume = 1f;
+
     private Vector3 startPos;
     private Vector3 targetPos;
     private bool isOpening = false;
     private bool hasOpened = false;
+
+    private AudioSource audioSource;
 
     private void Start()
     {
@@ -21,6 +29,10 @@ public class RaiseOnTrigger : MonoBehaviour
             startPos = targetObject.position;
             targetPos = startPos + Vector3.up * raiseAmount;
         }
+
+        audioSource = GetComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.loop = false;
     }
 
     private void Update()
@@ -47,7 +59,15 @@ public class RaiseOnTrigger : MonoBehaviour
         if (other.CompareTag("Player") && targetObject != null && !hasOpened)
         {
             isOpening = true;
+
             Debug.Log($"{targetObject.name} is opening smoothly!");
+
+            // Play SFX once when door starts opening
+            if (playDoorSfx && doorOpenSfx != null)
+            {
+                audioSource.volume = doorSfxVolume;
+                audioSource.PlayOneShot(doorOpenSfx, doorSfxVolume);
+            }
         }
     }
 }
