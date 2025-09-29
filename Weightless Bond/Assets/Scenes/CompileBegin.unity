@@ -8339,6 +8339,10 @@ PrefabInstance:
       value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 6380660812414665887, guid: 28d5abf1935c05f45b09d59590d0bdba, type: 3}
+      propertyPath: enableSpawnSFX
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6380660812414665887, guid: 28d5abf1935c05f45b09d59590d0bdba, type: 3}
       propertyPath: spawnAreaSize.x
       value: 6.12
       objectReference: {fileID: 0}

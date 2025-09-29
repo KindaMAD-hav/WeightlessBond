@@ -44,6 +44,7 @@ public class SphereSpawner : MonoBehaviour
     private float spawnRateReciprocal; // Store 1/spawnRate to avoid division
 
     [Header("Audio")]
+    public bool enableSpawnSFX = true; // toggle on/off
     public AudioClip spawnSound;
     [Range(0.5f, 2f)] public float pitchMin = 0.9f;
     [Range(0.5f, 2f)] public float pitchMax = 1.1f;
@@ -203,13 +204,15 @@ public class SphereSpawner : MonoBehaviour
         // Increment spawn counter
         spawnCountSinceLastSound++;
 
-        if (spawnSound != null && audioSource != null && playEveryNSpawns > 0)
+        if (enableSpawnSFX && spawnSound != null && audioSource != null && playEveryNSpawns > 0)
         {
+            spawnCountSinceLastSound++;
+
             if (spawnCountSinceLastSound >= playEveryNSpawns)
             {
                 audioSource.pitch = Random.Range(pitchMin, pitchMax);
                 audioSource.PlayOneShot(spawnSound);
-                spawnCountSinceLastSound = 0; // reset counter
+                spawnCountSinceLastSound = 0;
             }
         }
 
