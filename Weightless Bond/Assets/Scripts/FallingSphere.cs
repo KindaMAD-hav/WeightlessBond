@@ -5,12 +5,11 @@ public class FallingSphere : MonoBehaviour
     [Header("Damage Settings")]
     public float damage = 20f;
     public float explosionRadius = 2f;
-    public bool damageOnImpact = true;
     public bool destroyOnImpact = true;
 
     [Header("Visual Effects")]
     public GameObject impactEffect; // Particle system for explosion
-    public GameObject trailEffect; // Trail for the falling sphere
+    public GameObject trailEffect;  // Trail for the falling sphere
 
     [Header("Audio")]
     public AudioClip impactSound;
@@ -49,7 +48,7 @@ public class FallingSphere : MonoBehaviour
     {
         if (hasImpacted) return;
 
-        // Check if hit player
+        // Deal damage if it's the player
         if (other.CompareTag("Player"))
         {
             PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
@@ -58,30 +57,28 @@ public class FallingSphere : MonoBehaviour
                 playerHealth.TakeDamage(damage);
                 Debug.Log($"Player hit by falling sphere for {damage} damage!");
             }
+        }
 
-            Impact(other.transform.position);
-        }
-        // Check if hit ground or other objects
-        else if (other.CompareTag("Ground") || other.CompareTag("Terrain"))
-        {
-            Impact(transform.position);
-        }
+        // Impact on ANY trigger collider
+        Impact(other.transform.position);
     }
 
     void OnCollisionEnter(Collision collision)
     {
         if (hasImpacted) return;
 
-        // Alternative collision detection
+        // Deal damage if it's the player
         if (collision.gameObject.CompareTag("Player"))
         {
             PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
             if (playerHealth != null)
             {
                 playerHealth.TakeDamage(damage);
+                Debug.Log($"Player hit by falling sphere for {damage} damage!");
             }
         }
 
+        // Impact on ANY collision
         Impact(collision.contacts[0].point);
     }
 
@@ -90,7 +87,7 @@ public class FallingSphere : MonoBehaviour
         if (hasImpacted) return;
         hasImpacted = true;
 
-        // Area damage (optional - damages player if within explosion radius)
+        // Area damage
         if (explosionRadius > 0)
         {
             Collider[] hitColliders = Physics.OverlapSphere(impactPosition, explosionRadius);
@@ -101,11 +98,9 @@ public class FallingSphere : MonoBehaviour
                     PlayerHealth playerHealth = hitCollider.GetComponent<PlayerHealth>();
                     if (playerHealth != null)
                     {
-                        // Calculate distance-based damage
                         float distance = Vector3.Distance(impactPosition, hitCollider.transform.position);
                         float damageMultiplier = Mathf.Clamp01(1 - (distance / explosionRadius));
-                        float areaDamage = damage * 0.5f * damageMultiplier; // 50% damage for area effect
-
+                        float areaDamage = damage * 0.5f * damageMultiplier;
                         playerHealth.TakeDamage(areaDamage);
                         Debug.Log($"Player hit by explosion for {areaDamage} damage!");
                     }
@@ -126,17 +121,21 @@ public class FallingSphere : MonoBehaviour
             audioSource.PlayOneShot(impactSound);
         }
 
-        // Destroy or hide the sphere
+        // Destroy the sphere
         if (destroyOnImpact)
         {
-            // Delay destruction slightly to let sound play
+            if (trailEffect != null)
+            {
+                trailEffect.transform.parent = null; // Detach so it can finish
+                Destroy(trailEffect, 2f);           // Destroy after 2s
+            }
+
             GetComponent<Renderer>().enabled = false;
             GetComponent<Collider>().enabled = false;
             Destroy(gameObject, 1f);
         }
     }
 
-    // Visualize explosion radius in scene view
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
