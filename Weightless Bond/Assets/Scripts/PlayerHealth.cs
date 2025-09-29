@@ -227,6 +227,8 @@ public class PlayerHealth : MonoBehaviour
 
         // Trigger event
         OnPlayerRespawn?.Invoke();
+        OnHealthChanged?.Invoke(currentHealth);
+
 
         Debug.Log("Player respawned!");
     }
