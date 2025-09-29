@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(AudioSource))]
 public class ButtonDoorOpener : MonoBehaviour
 {
     [Header("Button Settings")]
@@ -27,6 +28,11 @@ public class ButtonDoorOpener : MonoBehaviour
     [Tooltip("Layers that are allowed to press the button. Leave empty to allow all.")]
     public LayerMask allowedLayers = ~0;
 
+    [Header("Audio Settings")]
+    public bool playDoorSfx = true;
+    public AudioClip doorOpenSfx;
+    [Range(0f, 1f)] public float doorSfxVolume = 1f;
+
     private Vector3 buttonStartPos;
     private Vector3 buttonPressedPos;
 
@@ -39,11 +45,16 @@ public class ButtonDoorOpener : MonoBehaviour
 
     private float lastPressTime = -999f;
     private Collider myCollider;
+    private AudioSource audioSource;
 
     void Awake()
     {
         myCollider = GetComponent<Collider>();
         if (!myCollider) Debug.LogError("[ButtonDoorOpener] Missing Collider on the button root.");
+
+        audioSource = GetComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.loop = false;
     }
 
     void Start()
@@ -95,36 +106,29 @@ public class ButtonDoorOpener : MonoBehaviour
     // Impact-driven activation
     // =========================
 
-    // Solid collider path (non-trigger)
     void OnCollisionEnter(Collision collision)
     {
         if (!IsLayerAllowed(collision.collider.gameObject.layer)) return;
         if (!PassesInteractableFilter(collision.collider)) return;
 
-        // Use physics-provided relative speed
         float relativeSpeed = collision.relativeVelocity.magnitude;
         TryPressFromImpact(collision.collider, relativeSpeed);
     }
 
-    // Trigger collider path
     void OnTriggerEnter(Collider other)
     {
-        if (!myCollider || !myCollider.isTrigger) return; // only handle if THIS is a trigger
+        if (!myCollider || !myCollider.isTrigger) return;
         if (!IsLayerAllowed(other.gameObject.layer)) return;
         if (!PassesInteractableFilter(other)) return;
 
-        // Approximate relative speed (object vs button). Prefer Rigidbody velocity.
         float relativeSpeed = 0f;
         var rb = other.attachedRigidbody;
         if (rb != null)
         {
-            // If your button is mounted on a static world, rb velocity is good enough.
-            // If the button moves, subtract button's own velocity (not common).
             relativeSpeed = rb.linearVelocity.magnitude;
         }
         else
         {
-            // No RB? Can't meaningfully measure impact speed -> ignore.
             return;
         }
 
@@ -144,24 +148,20 @@ public class ButtonDoorOpener : MonoBehaviour
 
     private void TryPressFromImpact(Collider other, float relativeSpeed)
     {
-        if (doorOpened) return;                          // already opened
-        if (Time.time - lastPressTime < pressCooldown) return; // debounce
+        if (doorOpened) return;
+        if (Time.time - lastPressTime < pressCooldown) return;
 
-        // Must have a rigidbody for mass/momentum checks
         var rb = other.attachedRigidbody;
         if (rb == null) return;
 
-        // Speed gate
         if (relativeSpeed < impactSpeedThreshold) return;
 
-        // Momentum gate (optional)
         if (momentumThreshold > 0f)
         {
-            float momentum = rb.mass * relativeSpeed; // kg*m/s
+            float momentum = rb.mass * relativeSpeed;
             if (momentum < momentumThreshold) return;
         }
 
-        // Passed thresholds -> press it
         Press();
     }
 
@@ -175,7 +175,14 @@ public class ButtonDoorOpener : MonoBehaviour
         doorOpening = true;
 
         Debug.Log("[ButtonDoorOpener] Button pressed by impact! Opening door...");
-        // Let the button pop back up after a short visual delay
+
+        // Play SFX once when door starts opening
+        if (playDoorSfx && doorOpenSfx != null)
+        {
+            audioSource.volume = doorSfxVolume;
+            audioSource.PlayOneShot(doorOpenSfx, doorSfxVolume);
+        }
+
         CancelInvoke(nameof(ReleaseVisual));
         Invoke(nameof(ReleaseVisual), 0.12f);
     }
