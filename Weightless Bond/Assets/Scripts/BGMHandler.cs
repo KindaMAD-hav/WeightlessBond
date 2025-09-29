@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using Debug = UnityEngine.Debug;   // <-- add this line
 
 public class BGMHandler : MonoBehaviour
 {
@@ -23,7 +24,6 @@ public class BGMHandler : MonoBehaviour
         else
             Destroy(gameObject);
 
-        // Get two audio sources (make sure they exist on this object)
         AudioSource[] sources = GetComponents<AudioSource>();
         if (sources.Length < 2)
         {
@@ -39,7 +39,6 @@ public class BGMHandler : MonoBehaviour
 
     void Start()
     {
-        // Play default track if assigned
         if (defaultTrack != null)
         {
             activeSource.clip = defaultTrack;
@@ -52,22 +51,17 @@ public class BGMHandler : MonoBehaviour
     public void PlayMusic(AudioClip clip)
     {
         if (clip == null) return;
-
-        // If the requested clip is already playing → do nothing
         if (activeSource.isPlaying && activeSource.clip == clip)
             return;
 
-        // Stop any ongoing fade
         if (fadeCoroutine != null)
             StopCoroutine(fadeCoroutine);
 
-        // Setup inactive source with new clip
         inactiveSource.clip = clip;
         inactiveSource.loop = true;
         inactiveSource.volume = 0f;
         inactiveSource.Play();
 
-        // Start smooth crossfade
         fadeCoroutine = StartCoroutine(Crossfade());
     }
 
@@ -89,7 +83,6 @@ public class BGMHandler : MonoBehaviour
             yield return null;
         }
 
-        // Finalize swap
         activeSource.Stop();
 
         var temp = activeSource;
@@ -97,6 +90,36 @@ public class BGMHandler : MonoBehaviour
         inactiveSource = temp;
 
         activeSource.volume = 1f;
+        inactiveSource.volume = 0f;
+
+        fadeCoroutine = null;
+    }
+
+    // === NEW: Fade out and stop all music ===
+    public void FadeOutMusic(float duration = 2f)
+    {
+        if (fadeCoroutine != null)
+            StopCoroutine(fadeCoroutine);
+
+        fadeCoroutine = StartCoroutine(FadeOutCoroutine(duration));
+    }
+
+    private IEnumerator FadeOutCoroutine(float duration)
+    {
+        float startVol = activeSource.volume;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = time / duration;
+            activeSource.volume = Mathf.Lerp(startVol, 0f, t);
+            yield return null;
+        }
+
+        activeSource.Stop();
+        inactiveSource.Stop();
+        activeSource.volume = 0f;
         inactiveSource.volume = 0f;
 
         fadeCoroutine = null;

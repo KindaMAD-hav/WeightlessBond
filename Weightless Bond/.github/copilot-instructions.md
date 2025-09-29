@@ -2,7 +2,7 @@
 - Project name: Weightless Bond
 - Unity version: Unity 6000.2.2f1
 - Active game object:
-  - Name: G_test (4)
-  - Tag: Interactable
-  - Layer: Interactable
+  - Name: Platform_Metal2
+  - Tag: Untagged
+  - Layer: Ground
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
