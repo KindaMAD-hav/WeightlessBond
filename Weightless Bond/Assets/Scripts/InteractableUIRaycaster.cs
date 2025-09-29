@@ -10,7 +10,9 @@ public class InteractableUIRaycaster : MonoBehaviour
     public float interactRange = 5f;
 
     [Header("UI")]
-    public RawImage interactIcon;
+    public RawImage interactIcon1;  // First icon
+    public RawImage interactIcon2;  // Second icon
+    public RawImage interactIcon3;  // Third icon
 
     [Header("Audio")]
     public AudioClip appearSound;
@@ -25,7 +27,11 @@ public class InteractableUIRaycaster : MonoBehaviour
     void Start()
     {
         if (cam == null) cam = Camera.main;
-        if (interactIcon != null) interactIcon.enabled = false;
+
+        // Hide all icons at start
+        if (interactIcon1 != null) interactIcon1.enabled = false;
+        if (interactIcon2 != null) interactIcon2.enabled = false;
+        if (interactIcon3 != null) interactIcon3.enabled = false;
 
         audioSource = GetComponent<AudioSource>();
         if (audioSource != null) audioSource.playOnAwake = false;
@@ -33,7 +39,7 @@ public class InteractableUIRaycaster : MonoBehaviour
 
     void Update()
     {
-        if (cam == null || interactIcon == null) return;
+        if (cam == null) return;
 
         Ray ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f));
         bool hitInteractable = Physics.Raycast(ray, out RaycastHit hit, interactRange, interactableMask);
@@ -52,13 +58,22 @@ public class InteractableUIRaycaster : MonoBehaviour
                 }
             }
 
-            interactIcon.enabled = true;
+            // Show all icons
+            SetIconsActive(true);
             wasVisible = true;
         }
         else
         {
-            interactIcon.enabled = false;
+            // Hide all icons
+            SetIconsActive(false);
             wasVisible = false;
         }
+    }
+
+    void SetIconsActive(bool state)
+    {
+        if (interactIcon1 != null) interactIcon1.enabled = state;
+        if (interactIcon2 != null) interactIcon2.enabled = state;
+        if (interactIcon3 != null) interactIcon3.enabled = state;
     }
 }
