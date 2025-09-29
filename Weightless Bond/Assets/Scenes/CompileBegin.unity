@@ -4749,20 +4749,24 @@ PrefabInstance:
       value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 4261333749787763757, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: appearSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 557436a0768de0c4486bb26eaf04d53f, type: 3}
+    - target: {fileID: 4261333749787763757, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: interactIcon
       value: 
       objectReference: {fileID: 1324346673}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 48
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 49.7
+      value: -3.77
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -100.68
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalRotation.w
