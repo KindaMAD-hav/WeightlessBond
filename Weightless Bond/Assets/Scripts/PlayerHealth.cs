@@ -68,6 +68,7 @@ public class PlayerHealth : MonoBehaviour
             overlayColor.a = 0f;
             damageOverlay.color = overlayColor;
         }
+        OnHealthChanged?.Invoke(currentHealth);
     }
 
     void Update()
@@ -226,6 +227,8 @@ public class PlayerHealth : MonoBehaviour
 
         // Trigger event
         OnPlayerRespawn?.Invoke();
+        OnHealthChanged?.Invoke(currentHealth);
+
 
         Debug.Log("Player respawned!");
     }
