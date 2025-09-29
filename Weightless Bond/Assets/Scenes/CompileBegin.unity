@@ -685,6 +685,9 @@ MonoBehaviour:
   targetObject: {fileID: 580905657}
   pressDepth: 10
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!1 &105381400 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1712146416486735346, guid: 6da0711993d33d1498b0c243051d23a4, type: 3}
@@ -3243,6 +3246,9 @@ MonoBehaviour:
   targetObject: {fileID: 1768552512}
   pressDepth: 10
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!1 &413451910 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1224516014524767674, guid: 6da0711993d33d1498b0c243051d23a4, type: 3}
@@ -4524,6 +4530,9 @@ MonoBehaviour:
   targetObject: {fileID: 203758002}
   pressDepth: 10
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!64 &504634607
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -5363,8 +5372,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   targetObject: {fileID: 1992421934}
-  pressDepth: 10
+  pressDepth: 50
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!114 &592266335
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5377,10 +5389,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8293855d65bc9741b67c80746a87be6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  button: {fileID: 444357241}
-  pressDepth: 10
-  pressSpeed: 5
-  pressCooldown: 0.15
+  button: {fileID: 592266336}
+  pressDepth: 50
+  pressSpeed: 10
+  pressCooldown: 1
   door: {fileID: 249985243403887012}
   raiseAmount: 5
   raiseSpeed: 2
@@ -5390,6 +5402,11 @@ MonoBehaviour:
   allowedLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!4 &592266336 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8874269468726666030, guid: d98457baa3a74404291b24ec6b6de3df, type: 3}
+  m_PrefabInstance: {fileID: 592266330}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &600399206 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4745919747541119769, guid: ad28a235984c0f643983d47a39337d86, type: 3}
@@ -5761,6 +5778,9 @@ MonoBehaviour:
   targetObject: {fileID: 1992421934}
   pressDepth: 10
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!1 &635619526 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -1004996277914882474, guid: 725f19c3b079e7642aa55cab5192686a, type: 3}
@@ -5872,6 +5892,9 @@ MonoBehaviour:
   targetObject: {fileID: 1668498942}
   pressDepth: 0.05
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!135 &683401301
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -6826,6 +6849,9 @@ MonoBehaviour:
   targetObject: {fileID: 1448367372}
   pressDepth: 10
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!1 &762646893 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -2681882065259337099, guid: 725f19c3b079e7642aa55cab5192686a, type: 3}
@@ -7316,6 +7342,9 @@ MonoBehaviour:
   targetObject: {fileID: 491674718}
   pressDepth: 10
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!1 &844312989 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -6111625616776260236, guid: 725f19c3b079e7642aa55cab5192686a, type: 3}
@@ -7628,6 +7657,9 @@ MonoBehaviour:
   targetObject: {fileID: 203758002}
   pressDepth: 0.05
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!135 &921863211
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -8895,6 +8927,9 @@ MonoBehaviour:
   targetObject: {fileID: 1992421934}
   pressDepth: 0.05
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!135 &1062139605
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -9785,6 +9820,9 @@ MonoBehaviour:
   targetObject: {fileID: 1787845296}
   pressDepth: 10
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!1 &1189132057 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -4546984775755269684, guid: 6da0711993d33d1498b0c243051d23a4, type: 3}
@@ -10264,6 +10302,9 @@ MonoBehaviour:
   targetObject: {fileID: 2029273772}
   pressDepth: 0.05
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!135 &1237559913
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -11839,6 +11880,9 @@ MonoBehaviour:
   targetObject: {fileID: 1787845296}
   pressDepth: 0.05
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!1 &1410365889 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 661634262256977423, guid: 6da0711993d33d1498b0c243051d23a4, type: 3}
@@ -12290,6 +12334,9 @@ MonoBehaviour:
   targetObject: {fileID: 601165092}
   pressDepth: 0.05
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!135 &1494877723
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -12979,6 +13026,9 @@ MonoBehaviour:
   targetObject: {fileID: 2029273772}
   pressDepth: 10
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!64 &1531854347
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -14846,6 +14896,9 @@ MonoBehaviour:
   targetObject: {fileID: 1668498942}
   pressDepth: 10
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!1 &1746296981 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8052530749833639197, guid: 6da0711993d33d1498b0c243051d23a4, type: 3}
@@ -14908,6 +14961,9 @@ MonoBehaviour:
   targetObject: {fileID: 580905657}
   pressDepth: 0.05
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!135 &1750550066
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -15677,6 +15733,9 @@ MonoBehaviour:
   targetObject: {fileID: 1448367372}
   pressDepth: 0.05
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!1001 &1783877744
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -17994,6 +18053,9 @@ MonoBehaviour:
   targetObject: {fileID: 491674718}
   pressDepth: 0.05
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!135 &2083072352
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -18310,6 +18372,9 @@ MonoBehaviour:
   targetObject: {fileID: 601165092}
   pressDepth: 10
   pressDuration: 0.1
+  playSfx: 1
+  buttonSfx: {fileID: 8300000, guid: 886c48f0fed9f8d458da560721b1eb91, type: 3}
+  sfxVolume: 1
 --- !u!1 &2130933995 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2426801036077663183, guid: 6da0711993d33d1498b0c243051d23a4, type: 3}
