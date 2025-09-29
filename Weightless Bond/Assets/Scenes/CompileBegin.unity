@@ -4087,6 +4087,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1051189780}
     - target: {fileID: 282811687263653554, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: showDamageEffect
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 282811687263653554, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: invincibilityDuration
       value: 0.2
       objectReference: {fileID: 0}
@@ -8210,11 +8214,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6380660812414665887, guid: 28d5abf1935c05f45b09d59590d0bdba, type: 3}
       propertyPath: damageRange.x
-      value: 200
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 6380660812414665887, guid: 28d5abf1935c05f45b09d59590d0bdba, type: 3}
       propertyPath: damageRange.y
-      value: 300
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 6380660812414665887, guid: 28d5abf1935c05f45b09d59590d0bdba, type: 3}
       propertyPath: spawnAreaSize.x
