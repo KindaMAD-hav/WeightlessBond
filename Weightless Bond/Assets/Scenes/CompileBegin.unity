@@ -689,7 +689,7 @@ MonoBehaviour:
   pressDepth: 10
   pressDuration: 0.1
   playSfx: 1
-  buttonSfx: {fileID: 8300000, guid: 813a52d5aed603a41b82a4de747ca285, type: 3}
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
   sfxVolume: 1
 --- !u!82 &105262535
 AudioSource:
@@ -3350,7 +3350,7 @@ MonoBehaviour:
   pressDepth: 10
   pressDuration: 0.1
   playSfx: 1
-  buttonSfx: {fileID: 8300000, guid: 813a52d5aed603a41b82a4de747ca285, type: 3}
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
   sfxVolume: 1
 --- !u!82 &401939591
 AudioSource:
@@ -4732,6 +4732,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 278319698575709458, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: pickupSfx
+      value: 
+      objectReference: {fileID: 8300000, guid: bb5b62bbc44504c47b8c9c60402a5bcc, type: 3}
+    - target: {fileID: 278319698575709458, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: pickupVolume
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 282811687263653554, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: healthBar
       value: 
@@ -4954,7 +4962,7 @@ MonoBehaviour:
   pressDepth: 10
   pressDuration: 0.1
   playSfx: 1
-  buttonSfx: {fileID: 8300000, guid: 813a52d5aed603a41b82a4de747ca285, type: 3}
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
   sfxVolume: 1
 --- !u!82 &504267336
 AudioSource:
@@ -6004,7 +6012,7 @@ MonoBehaviour:
   pressDepth: 50
   pressDuration: 0.1
   playSfx: 1
-  buttonSfx: {fileID: 8300000, guid: 813a52d5aed603a41b82a4de747ca285, type: 3}
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
   sfxVolume: 1
 --- !u!114 &592266335
 MonoBehaviour:
@@ -6583,7 +6591,7 @@ MonoBehaviour:
   pressDepth: 10
   pressDuration: 0.1
   playSfx: 1
-  buttonSfx: {fileID: 8300000, guid: 813a52d5aed603a41b82a4de747ca285, type: 3}
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
   sfxVolume: 1
 --- !u!82 &634229282
 AudioSource:
@@ -7852,7 +7860,7 @@ MonoBehaviour:
   pressDepth: 10
   pressDuration: 0.1
   playSfx: 1
-  buttonSfx: {fileID: 8300000, guid: 813a52d5aed603a41b82a4de747ca285, type: 3}
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
   sfxVolume: 1
 --- !u!82 &761611925
 AudioSource:
@@ -8453,7 +8461,7 @@ MonoBehaviour:
   pressDepth: 10
   pressDuration: 0.1
   playSfx: 1
-  buttonSfx: {fileID: 8300000, guid: 813a52d5aed603a41b82a4de747ca285, type: 3}
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
   sfxVolume: 1
 --- !u!82 &843946304
 AudioSource:
@@ -11294,7 +11302,7 @@ MonoBehaviour:
   pressDepth: 10
   pressDuration: 0.1
   playSfx: 1
-  buttonSfx: {fileID: 8300000, guid: 813a52d5aed603a41b82a4de747ca285, type: 3}
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
   sfxVolume: 1
 --- !u!82 &1187833336
 AudioSource:
@@ -14894,7 +14902,7 @@ MonoBehaviour:
   pressDepth: 10
   pressDuration: 0.1
   playSfx: 1
-  buttonSfx: {fileID: 8300000, guid: 813a52d5aed603a41b82a4de747ca285, type: 3}
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
   sfxVolume: 1
 --- !u!82 &1530868264
 AudioSource:
@@ -17170,7 +17178,7 @@ MonoBehaviour:
   pressDepth: 10
   pressDuration: 0.1
   playSfx: 1
-  buttonSfx: {fileID: 8300000, guid: 813a52d5aed603a41b82a4de747ca285, type: 3}
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
   sfxVolume: 1
 --- !u!82 &1735602033
 AudioSource:
@@ -21146,7 +21154,7 @@ MonoBehaviour:
   pressDepth: 10
   pressDuration: 0.1
   playSfx: 1
-  buttonSfx: {fileID: 8300000, guid: 813a52d5aed603a41b82a4de747ca285, type: 3}
+  buttonSfx: {fileID: 8300000, guid: 0f3c01db297dfce4689395a05e573fd2, type: 3}
   sfxVolume: 1
 --- !u!82 &2126118718
 AudioSource:
