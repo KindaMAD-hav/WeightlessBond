@@ -68,6 +68,7 @@ public class PlayerHealth : MonoBehaviour
             overlayColor.a = 0f;
             damageOverlay.color = overlayColor;
         }
+        OnHealthChanged?.Invoke(currentHealth);
     }
 
     void Update()
