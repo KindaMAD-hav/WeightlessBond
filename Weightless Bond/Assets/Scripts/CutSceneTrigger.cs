@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
-using UnityEngine.Video;
 using UnityEngine.UI;
+using UnityEngine.Video;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class CutsceneTrigger : MonoBehaviour
 {
@@ -17,8 +19,11 @@ public class CutsceneTrigger : MonoBehaviour
 
     [Header("Cutscene Settings")]
     public bool isFinalCutscene = false;
+    public string finalSceneName = "MainMenu";
+    public float finalCutsceneDelay = 12f;   // seconds before loading finalSceneName
 
     private bool isPlaying = false;
+    private bool sceneChangeQueued = false;
 
     void Start()
     {
@@ -50,18 +55,31 @@ public class CutsceneTrigger : MonoBehaviour
 
         if (isFinalCutscene && BGMHandler.Instance != null)
         {
-            // 2-second fadeout
-            BGMHandler.Instance.FadeOutMusic(2f);
+            BGMHandler.Instance.FadeOutMusic(2f); // fade BGM over 2s
+            if (!sceneChangeQueued)
+            {
+                sceneChangeQueued = true;
+                StartCoroutine(LoadFinalSceneAfterDelay(finalCutsceneDelay));
+            }
         }
 
-        videoPlayer.loopPointReached += OnCutsceneEnd; // <-- method exists below
+        videoPlayer.loopPointReached += OnCutsceneEnd;
         videoPlayer.Play();
     }
 
-    private void OnCutsceneEnd(VideoPlayer vp)         // <-- must match delegate signature
+    private void OnCutsceneEnd(VideoPlayer vp)
     {
         isPlaying = false;
-        if (cutsceneUI) cutsceneUI.SetActive(false);
+
+        // Keep UI up if we're going to switch scenes soon; otherwise hide it
+        if (!isFinalCutscene && cutsceneUI) cutsceneUI.SetActive(false);
+
         videoPlayer.loopPointReached -= OnCutsceneEnd;
+    }
+
+    private IEnumerator LoadFinalSceneAfterDelay(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        SceneManager.LoadScene(finalSceneName);
     }
 }

@@ -4754,15 +4754,15 @@ PrefabInstance:
       objectReference: {fileID: 1324346673}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 48
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -4.65
+      value: 49.7
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -100.68
       objectReference: {fileID: 0}
     - target: {fileID: 5573580697401710149, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_LocalRotation.w
@@ -16066,6 +16066,8 @@ MonoBehaviour:
     m_Bits: 64
   playerCamera: {fileID: 1922362899}
   isFinalCutscene: 1
+  finalSceneName: MainMenu
+  finalCutsceneDelay: 12
 --- !u!64 &1647240055
 MeshCollider:
   m_ObjectHideFlags: 0
