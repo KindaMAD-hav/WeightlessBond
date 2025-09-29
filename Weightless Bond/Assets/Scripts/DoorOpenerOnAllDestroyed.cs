@@ -38,11 +38,11 @@ public class DoorOpenerOnAllDestroyed : MonoBehaviour
 
     void Update()
     {
-        if (!hasOpened && AllDestroyed())
+        // Only transition into opening ONCE
+        if (!hasOpened && !isOpening && AllDestroyed())
         {
             isOpening = true;
 
-            // Play door SFX once at the start of opening
             if (playDoorSfx && doorOpenSfx != null)
             {
                 audioSource.volume = doorSfxVolume;
