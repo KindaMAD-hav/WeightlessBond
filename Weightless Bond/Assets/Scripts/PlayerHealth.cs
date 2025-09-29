@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -158,7 +159,7 @@ public class PlayerHealth : MonoBehaviour
         // Play death sound
         PlaySound(deathSound);
 
-        // Disable player controls (you might need to adjust this based on your player controller)
+        // Disable player controls
         DisablePlayerControls();
 
         if (respawnOnDeath)
@@ -167,8 +168,8 @@ public class PlayerHealth : MonoBehaviour
         }
         else
         {
-            // Handle permanent death (restart level, game over screen, etc.)
-            HandleGameOver();
+            // Instead of just HandleGameOver, reload the scene
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
     }
 

@@ -4087,6 +4087,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1051189780}
     - target: {fileID: 282811687263653554, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: respawnOnDeath
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 282811687263653554, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: showDamageEffect
       value: 0
       objectReference: {fileID: 0}
