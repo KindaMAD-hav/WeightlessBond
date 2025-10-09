@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class DoorOpenerOnAllDestroyed : MonoBehaviour
 {
     [Header("Door Settings")]
@@ -10,10 +11,17 @@ public class DoorOpenerOnAllDestroyed : MonoBehaviour
     [Header("Conditions")]
     public GameObject[] requiredObjects; // Assign objects in inspector
 
+    [Header("Audio Settings")]
+    public bool playDoorSfx = true;
+    public AudioClip doorOpenSfx;
+    [Range(0f, 1f)] public float doorSfxVolume = 1f;
+
     private Vector3 startPos;
     private Vector3 targetPos;
     private bool isOpening = false;
     private bool hasOpened = false;
+
+    private AudioSource audioSource;
 
     void Start()
     {
@@ -22,13 +30,24 @@ public class DoorOpenerOnAllDestroyed : MonoBehaviour
             startPos = door.position;
             targetPos = startPos + Vector3.up * raiseAmount;
         }
+
+        audioSource = GetComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.loop = false;
     }
 
     void Update()
     {
-        if (!hasOpened && AllDestroyed())
+        // Only transition into opening ONCE
+        if (!hasOpened && !isOpening && AllDestroyed())
         {
             isOpening = true;
+
+            if (playDoorSfx && doorOpenSfx != null)
+            {
+                audioSource.volume = doorSfxVolume;
+                audioSource.PlayOneShot(doorOpenSfx, doorSfxVolume);
+            }
         }
 
         if (isOpening && door != null)

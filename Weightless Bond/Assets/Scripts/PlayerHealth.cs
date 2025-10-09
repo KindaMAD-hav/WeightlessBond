@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -84,35 +85,34 @@ public class PlayerHealth : MonoBehaviour
         // Update UI
         UpdateHealthUI();
     }
-
+    // Back-compat overload so existing code compiles:
     public void TakeDamage(float damage)
     {
-        if (isDead || isInvincible) return;
+        TakeDamage(damage, false); // respect invincibility by default
+    }
+
+    public void TakeDamage(float damage, bool ignoreInvincibility)
+    {
+        if (isDead) return;
+        if (!ignoreInvincibility && isInvincible) return;
 
         // Apply damage
-        currentHealth -= damage;
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        currentHealth = Mathf.Clamp(currentHealth - damage, 0, maxHealth);
 
-        // Record damage time for regeneration
         lastDamageTime = Time.time;
-
-        // Trigger events
         OnHealthChanged?.Invoke(currentHealth);
 
-        // Visual and audio feedback
-        StartCoroutine(DamageEffect());
-        PlaySound(damageSound);
-
-        // Start invincibility
-        StartCoroutine(InvincibilityCoroutine());
+        if (!ignoreInvincibility)
+        {
+            // Only play damage FX + i-frames if not bypassing
+            StartCoroutine(DamageEffect());
+            PlaySound(damageSound);
+            StartCoroutine(InvincibilityCoroutine());
+        }
 
         Debug.Log($"Player took {damage} damage. Health: {currentHealth}/{maxHealth}");
 
-        // Check for death
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
+        if (currentHealth <= 0) Die();
     }
 
     public void Heal(float amount)
@@ -159,7 +159,7 @@ public class PlayerHealth : MonoBehaviour
         // Play death sound
         PlaySound(deathSound);
 
-        // Disable player controls (you might need to adjust this based on your player controller)
+        // Disable player controls
         DisablePlayerControls();
 
         if (respawnOnDeath)
@@ -168,8 +168,8 @@ public class PlayerHealth : MonoBehaviour
         }
         else
         {
-            // Handle permanent death (restart level, game over screen, etc.)
-            HandleGameOver();
+            // Instead of just HandleGameOver, reload the scene
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
     }
 

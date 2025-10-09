@@ -107,7 +107,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -127,7 +127,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   damage: 20
   explosionRadius: 2
-  damageOnImpact: 1
   destroyOnImpact: 1
   impactEffect: {fileID: 0}
   trailEffect: {fileID: 0}

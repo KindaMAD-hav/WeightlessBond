@@ -4,141 +4,67 @@ public class FallingSphere : MonoBehaviour
 {
     [Header("Damage Settings")]
     public float damage = 20f;
-    public float explosionRadius = 2f;
     public bool destroyOnImpact = true;
+    public bool bypassIFrames = true;   // make hits always count (ignores invincibility)
 
-    [Header("Visual Effects")]
-    public GameObject impactEffect; // Particle system for explosion
-    public GameObject trailEffect;  // Trail for the falling sphere
-
-    [Header("Audio")]
+    [Header("Visual / Audio")]
+    public GameObject impactEffect;     // optional
+    public GameObject trailEffect;      // optional
     public AudioClip impactSound;
-    public AudioClip whistleSound; // Sound while falling
+    public AudioClip whistleSound;
 
     [Header("Physics")]
     public float fallSpeed = 10f;
-    public float lifeTime = 10f; // Auto-destroy after this time
+    public float lifeTime = 10f;
 
-    private Rigidbody rb;
-    private AudioSource audioSource;
-    private bool hasImpacted = false;
+    Rigidbody rb;
+    AudioSource audioSource;
+    bool hasImpacted = false;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         audioSource = GetComponent<AudioSource>();
 
-        // Set initial velocity
         if (rb != null)
         {
-            rb.linearVelocity = Vector3.down * fallSpeed;
+            rb.linearVelocity = Vector3.down * fallSpeed;                    // FIX
+            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         }
 
-        // Play whistle sound
-        if (audioSource && whistleSound)
-        {
-            audioSource.PlayOneShot(whistleSound);
-        }
+        if (audioSource && whistleSound) audioSource.PlayOneShot(whistleSound);
 
-        // Auto-destroy after lifetime
         Destroy(gameObject, lifeTime);
     }
 
+    // Make sure the sphere's SphereCollider is set to IsTrigger = true
     void OnTriggerEnter(Collider other)
-    {
-        if (hasImpacted) return;
-
-        // Deal damage if it's the player
-        if (other.CompareTag("Player"))
-        {
-            PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
-            {
-                playerHealth.TakeDamage(damage);
-                Debug.Log($"Player hit by falling sphere for {damage} damage!");
-            }
-        }
-
-        // Impact on ANY trigger collider
-        Impact(other.transform.position);
-    }
-
-    void OnCollisionEnter(Collision collision)
-    {
-        if (hasImpacted) return;
-
-        // Deal damage if it's the player
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
-            {
-                playerHealth.TakeDamage(damage);
-                Debug.Log($"Player hit by falling sphere for {damage} damage!");
-            }
-        }
-
-        // Impact on ANY collision
-        Impact(collision.contacts[0].point);
-    }
-
-    void Impact(Vector3 impactPosition)
     {
         if (hasImpacted) return;
         hasImpacted = true;
 
-        // Area damage
-        if (explosionRadius > 0)
+        // Damage player once
+        if (other.CompareTag("Player"))
         {
-            Collider[] hitColliders = Physics.OverlapSphere(impactPosition, explosionRadius);
-            foreach (var hitCollider in hitColliders)
+            var ph = other.GetComponent<PlayerHealth>();
+            if (ph != null)
             {
-                if (hitCollider.CompareTag("Player"))
-                {
-                    PlayerHealth playerHealth = hitCollider.GetComponent<PlayerHealth>();
-                    if (playerHealth != null)
-                    {
-                        float distance = Vector3.Distance(impactPosition, hitCollider.transform.position);
-                        float damageMultiplier = Mathf.Clamp01(1 - (distance / explosionRadius));
-                        float areaDamage = damage * 0.5f * damageMultiplier;
-                        playerHealth.TakeDamage(areaDamage);
-                        Debug.Log($"Player hit by explosion for {areaDamage} damage!");
-                    }
-                }
+                if (bypassIFrames) ph.TakeDamage(damage, ignoreInvincibility: true);
+                else ph.TakeDamage(damage);
             }
         }
 
-        // Visual effects
-        if (impactEffect != null)
-        {
-            GameObject effect = Instantiate(impactEffect, impactPosition, Quaternion.identity);
-            Destroy(effect, 3f);
-        }
+        // VFX/SFX (optional)
+        if (impactEffect) { var fx = Instantiate(impactEffect, transform.position, Quaternion.identity); Destroy(fx, 3f); }
+        if (audioSource && impactSound) audioSource.PlayOneShot(impactSound);
 
-        // Audio
-        if (audioSource && impactSound)
-        {
-            audioSource.PlayOneShot(impactSound);
-        }
-
-        // Destroy the sphere
+        // Clean up
         if (destroyOnImpact)
         {
-            if (trailEffect != null)
-            {
-                trailEffect.transform.parent = null; // Detach so it can finish
-                Destroy(trailEffect, 2f);           // Destroy after 2s
-            }
-
-            GetComponent<Renderer>().enabled = false;
-            GetComponent<Collider>().enabled = false;
+            if (trailEffect) { trailEffect.transform.SetParent(null); Destroy(trailEffect, 2f); }
+            var rend = GetComponent<Renderer>(); if (rend) rend.enabled = false;
+            var col = GetComponent<Collider>(); if (col) col.enabled = false;
             Destroy(gameObject, 1f);
         }
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, explosionRadius);
     }
 }
