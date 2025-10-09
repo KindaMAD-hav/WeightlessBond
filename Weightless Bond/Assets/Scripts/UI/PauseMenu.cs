@@ -1,11 +1,16 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.UI; // <- add this
 
 public class PauseMenu : MonoBehaviour
 {
     [Header("UI References")]
     [Tooltip("Assign your pause menu UI (Canvas or panel) here.")]
     public GameObject pauseMenuUI;
+
+    // NEW: assign the slider from your pause menu UI
+    [Tooltip("Master volume slider (0..1).")]
+    public Slider volumeSlider;
 
     [Header("Settings")]
     [Tooltip("Optional: Lock or unlock cursor when pausing.")]
@@ -21,7 +26,22 @@ public class PauseMenu : MonoBehaviour
         if (pauseMenuUI != null)
             pauseMenuUI.SetActive(false);
 
+        // Init slider from saved volume (if assigned)
+        if (volumeSlider != null && AudioController.Instance != null)
+        {
+            volumeSlider.minValue = 0f;
+            volumeSlider.maxValue = 1f;
+            volumeSlider.value = AudioController.Instance.GetVolume();
+            volumeSlider.onValueChanged.AddListener(OnVolumeChanged);
+        }
+
         SetPause(false);
+    }
+
+    void OnDestroy()
+    {
+        if (volumeSlider != null)
+            volumeSlider.onValueChanged.RemoveListener(OnVolumeChanged);
     }
 
     void Update()
@@ -34,6 +54,13 @@ public class PauseMenu : MonoBehaviour
     {
         SetPause(!IsPaused);
     }
+
+    private void OnVolumeChanged(float v)
+    {
+        if (AudioController.Instance != null)
+            AudioController.Instance.SetVolume(v);
+    }
+
 
     public void SetPause(bool pause)
     {
@@ -62,6 +89,8 @@ public class PauseMenu : MonoBehaviour
                 Cursor.lockState = CursorLockMode.Locked;
             }
         }
+        if (pause && volumeSlider != null && AudioController.Instance != null)
+            volumeSlider.value = AudioController.Instance.GetVolume();
     }
 
     // --- Audio Handling ---
