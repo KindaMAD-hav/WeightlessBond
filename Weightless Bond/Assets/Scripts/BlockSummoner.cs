@@ -13,6 +13,7 @@ public class BlockSummoner : MonoBehaviour
 
     [Header("References")]
     public Camera playerCamera;
+    public ParticleSystem summonEffectPrefab; // 🎇 Particle effect prefab reference
 
     private List<Transform> blocks = new List<Transform>();
     private Dictionary<Transform, Vector3> originalPositions = new Dictionary<Transform, Vector3>();
@@ -59,6 +60,14 @@ public class BlockSummoner : MonoBehaviour
 
         Debug.Log("[BlockSummoner] Summoning platform at " + targetPoint);
 
+        // ✨ Spawn particle effect at the middle of the platform
+        if (summonEffectPrefab != null)
+        {
+            ParticleSystem effect = Instantiate(summonEffectPrefab, targetPoint, Quaternion.identity);
+            effect.Play();
+            StartCoroutine(DestroyWhenDone(effect)); // Waits for the effect to finish completely
+        }
+
         // Create grid offsets (3x3)
         List<Vector3> gridOffsets = new List<Vector3>();
         for (int x = -1; x <= 1; x++)
@@ -76,7 +85,7 @@ public class BlockSummoner : MonoBehaviour
             gridPositions[i] = targetPoint + gridOffsets[i];
         }
 
-        // Assign blocks to grid positions
+        // Move blocks into position
         int count = Mathf.Min(blocks.Count, gridPositions.Length);
         for (int i = 0; i < count; i++)
         {
@@ -113,5 +122,12 @@ public class BlockSummoner : MonoBehaviour
         }
 
         block.position = target;
+    }
+
+    // 🌀 Waits for particle system (and subemitters) to finish before destroying it
+    private IEnumerator DestroyWhenDone(ParticleSystem ps)
+    {
+        yield return new WaitUntil(() => !ps.IsAlive(true));
+        Destroy(ps.gameObject);
     }
 }

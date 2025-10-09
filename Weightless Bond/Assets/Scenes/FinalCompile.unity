@@ -33577,6 +33577,7 @@ MonoBehaviour:
   blockStopThreshold: 0.1
   gridSpacing: 1.5
   playerCamera: {fileID: 1922362899}
+  summonEffectPrefab: {fileID: 1690766063951776008, guid: 22d641fac63a3ff40b864ac953b4dd55, type: 3}
 --- !u!1 &921863209
 GameObject:
   m_ObjectHideFlags: 0
