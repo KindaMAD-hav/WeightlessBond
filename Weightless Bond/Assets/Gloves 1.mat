@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Gloves
+  m_Name: Gloves 1
   m_Shader: {fileID: -6465566751694194690, guid: a08f3a1c845d57c4293a42c3202574a1, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -68,8 +68,8 @@ Material:
     - _QueueOffset: 0
     - _Roughness: 0.454
     m_Colors:
-    - _Color: {r: 0.7372549, g: 0.72156864, b: 0.9960785, a: 1}
-    - _EmissionColor: {r: 0.7372549, g: 0.72156864, b: 0.9960785, a: 1}
+    - _Color: {r: 0.69171315, g: 0, b: 0.9924528, a: 1}
+    - _EmissionColor: {r: 0.6901961, g: 0, b: 0.9921569, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &5464026623120991741
