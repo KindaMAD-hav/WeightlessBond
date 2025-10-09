@@ -2,7 +2,7 @@
 - Project name: Weightless Bond
 - Unity version: Unity 6000.2.2f1
 - Active game object:
-  - Name: room3.5v2 (1)
+  - Name: GravRoom
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
