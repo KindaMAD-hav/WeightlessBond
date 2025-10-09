@@ -18800,6 +18800,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1068779504}
     - target: {fileID: 4851069975193698688, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: m_RendererIndex
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4851069975193698688, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_RenderPostProcessing
       value: 1
       objectReference: {fileID: 0}
