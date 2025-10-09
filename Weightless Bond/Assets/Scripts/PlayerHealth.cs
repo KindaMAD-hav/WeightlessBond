@@ -91,6 +91,9 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("Player respawned immediately at checkpoint.");
     }
 
+    // Returns the current respawn point so checkpoints can compare.
+    public Transform GetRespawnPoint() => respawnPoint;
+
 
     void Start()
     {

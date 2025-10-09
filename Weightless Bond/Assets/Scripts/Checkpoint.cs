@@ -1,38 +1,37 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [DisallowMultipleComponent]
 public class Checkpoint : MonoBehaviour
 {
-    [Tooltip("Optional: use a different transform (empty) for the exact spawn pose. If null, this object�s transform is used.")]
+    [Tooltip("Optional: exact spawn pose. If null, this object's transform is used.")]
     public Transform spawnTransform;
 
-    [Tooltip("Play once then stop reacting.")]
+    [Tooltip("Play only once, then stop reacting after it becomes the active checkpoint.")]
     public bool oneTime = false;
 
-    [Tooltip("Optional SFX when checkpoint is reached.")]
+    [Tooltip("Optional SFX when a NEW checkpoint is reached.")]
     public AudioClip reachedSfx;
 
-    void OnTriggerEnter(Collider other)
-    {
-        TrySetCheckpoint(other);
-    }
-
-    void OnCollisionEnter(Collision collision)
-    {
-        TrySetCheckpoint(collision.collider);
-    }
+    void OnTriggerEnter(Collider other) { TrySetCheckpoint(other); }
+    void OnCollisionEnter(Collision c) { TrySetCheckpoint(c.collider); }
 
     void TrySetCheckpoint(Collider col)
     {
         var health = col.GetComponentInParent<PlayerHealth>();
         if (health == null) return;
 
-        health.SetRespawnPoint(spawnTransform != null ? spawnTransform : transform);
+        Transform target = spawnTransform != null ? spawnTransform : transform;
 
-        if (reachedSfx) AudioSource.PlayClipAtPoint(reachedSfx, transform.position);
+        // Only react when switching to a DIFFERENT checkpoint
+        if (health.GetRespawnPoint() == target)
+            return;
+
+        health.SetRespawnPoint(target);
+
+        if (reachedSfx) AudioSource.PlayClipAtPoint(reachedSfx, target.position);
         if (oneTime) enabled = false;
 
-        Debug.Log($"Checkpoint set to {(spawnTransform ? spawnTransform.name : name)}.");
+        Debug.Log($"Checkpoint set → {target.name}");
     }
 
 #if UNITY_EDITOR
