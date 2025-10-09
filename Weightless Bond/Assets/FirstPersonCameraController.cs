@@ -63,7 +63,6 @@ public class FirstPersonCamera : MonoBehaviour
         // Auto-find a good yaw target if none assigned:
         if (!yawTarget)
         {
-            // Try to find the FirstPersonController in parents and use its transform
             var fpc = GetComponentInParent<FirstPersonController>();
             if (fpc) yawTarget = fpc.transform;
             else if (transform.parent) yawTarget = transform.parent; // fallback: holder
@@ -79,13 +78,32 @@ public class FirstPersonCamera : MonoBehaviour
         originalCameraPosition = transform.localPosition;
         targetFOV = normalFOV;
 
-        // Own cursor here. If you keep it here, remove it from FirstPersonController.Start()
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        // Only lock on start if we're not already paused
+        if (!PauseMenu.IsPaused)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 
     void Update()
     {
+        // If paused: no input, no rotation, gently ease local position back using unscaled time.
+        if (PauseMenu.IsPaused)
+        {
+            mouseX = mouseY = 0f;
+
+            if (enableHeadBob || enableSway)
+            {
+                transform.localPosition = Vector3.Lerp(
+                    transform.localPosition,
+                    originalCameraPosition,
+                    bobSmoothing * Time.unscaledDeltaTime
+                );
+            }
+            return;
+        }
+
         HandleCursorToggle();               // may set skipOneFrameMouse
         HandleMouseInput();                 // safe read
         HandleCameraRotation();             // apply yaw/pitch
@@ -105,25 +123,20 @@ public class FirstPersonCamera : MonoBehaviour
             return;
         }
 
-        // Raw mouse deltas; DO NOT multiply by Time.deltaTime
         float rawX = Input.GetAxisRaw("Mouse X");
         float rawY = Input.GetAxisRaw("Mouse Y");
 
-        // Scale by sensitivities
         mouseX = rawX * horizontalSensitivity;
         mouseY = rawY * verticalSensitivity;
 
-        // Clamp per-frame to nuke rare +huge deltas
         mouseX = Mathf.Clamp(mouseX, -maxDeltaPerFrame, maxDeltaPerFrame);
         mouseY = Mathf.Clamp(mouseY, -maxDeltaPerFrame, maxDeltaPerFrame);
     }
 
     void HandleCameraRotation()
     {
-        // Yaw on player root (yawTarget)
         if (yawTarget) yawTarget.Rotate(Vector3.up * mouseX, Space.Self);
 
-        // Pitch on camera
         xRotation = Mathf.Clamp(xRotation - mouseY, minVerticalAngle, maxVerticalAngle);
         transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
@@ -165,7 +178,6 @@ public class FirstPersonCamera : MonoBehaviour
         Vector3 targetSway = new Vector3(-mouseY * swayAmount, mouseX * swayAmount, 0f);
         swayPosition = Vector3.Lerp(swayPosition, targetSway, swaySmoothing * Time.deltaTime);
 
-        // Add to current local position (plays nicely with bob)
         transform.localPosition = Vector3.Lerp(transform.localPosition, originalCameraPosition + swayPosition, swaySmoothing * Time.deltaTime);
     }
 
@@ -179,21 +191,18 @@ public class FirstPersonCamera : MonoBehaviour
 
     void HandleCursorToggle()
     {
-        // Press Esc to unlock
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
+        // While paused, PauseMenu manages cursor; don't touch it here.
+        if (PauseMenu.IsPaused) return;
 
-        // Left click to relock
+        // We do NOT handle Escape here — PauseMenu owns that hotkey.
+        // Left click to relock when the game is not paused:
         if (Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+            skipOneFrameMouse = true; // avoid one-frame input spike on relock
         }
     }
-
 
     public void ToggleCursor()
     {
@@ -201,11 +210,13 @@ public class FirstPersonCamera : MonoBehaviour
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+            skipOneFrameMouse = true;
         }
         else
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+            skipOneFrameMouse = true;
         }
     }
 
