@@ -2,7 +2,7 @@
 - Project name: Weightless Bond
 - Unity version: Unity 6000.2.2f1
 - Active game object:
-  - Name: ShortWall_MetalPlates_Straight.006
+  - Name: room3.5v2 (1)
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
