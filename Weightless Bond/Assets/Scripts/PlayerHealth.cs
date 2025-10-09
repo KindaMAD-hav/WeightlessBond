@@ -44,6 +44,54 @@ public class PlayerHealth : MonoBehaviour
     public System.Action OnPlayerDeath;
     public System.Action OnPlayerRespawn;
 
+    // --- Add to PlayerHealth.cs ---
+    public void SetRespawnPoint(Transform point)
+    {
+        if (point != null) respawnPoint = point;
+    }
+
+    /// <summary>
+    /// Instantly teleport to the current respawnPoint (no death screen, no delay).
+    /// Optionally full-heal (default = true).
+    /// </summary>
+    public void RespawnImmediate(bool fullHeal = true)
+    {
+        // Defensive: ensure we have a point
+        if (respawnPoint == null) respawnPoint = transform;
+
+        // Temporarily disable physics/controllers to avoid skin-overlap issues
+        var cc = GetComponent<CharacterController>();
+        var rb = GetComponent<Rigidbody>();
+        bool hadCC = cc != null && cc.enabled;
+        bool hadRB = rb != null && !rb.isKinematic;
+
+        if (cc != null) cc.enabled = false;
+        if (rb != null) rb.isKinematic = true;
+
+        transform.SetPositionAndRotation(respawnPoint.position, respawnPoint.rotation);
+
+        if (cc != null) cc.enabled = true;
+        if (rb != null) rb.isKinematic = !hadRB;
+
+        if (fullHeal) currentHealth = maxHealth;
+
+        isDead = false;
+        isInvincible = false;
+
+        // Restore visuals
+        if (playerRenderer != null) playerRenderer.material.color = originalColor;
+
+        // Re-enable normal control
+        EnablePlayerControls();
+
+        // Notify listeners/UI
+        OnPlayerRespawn?.Invoke();
+        OnHealthChanged?.Invoke(currentHealth);
+
+        Debug.Log("Player respawned immediately at checkpoint.");
+    }
+
+
     void Start()
     {
         // Initialize health
