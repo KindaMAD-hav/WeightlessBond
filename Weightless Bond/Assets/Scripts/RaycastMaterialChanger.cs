@@ -11,7 +11,7 @@ public class RaycastMaterialChanger : MonoBehaviour
 
     [Header("Settings")]
     public float interactDistance = 5f;
-    public KeyCode interactionKey = KeyCode.E;
+    public KeyCode interactionKey = KeyCode.Q;
     public float spinSpeed = 90f;         // How fast the interactable spins
 
     private bool isInteracted = false;

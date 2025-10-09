@@ -31959,7 +31959,7 @@ MonoBehaviour:
   playerCamera: {fileID: 1922362899}
   interactableObject: {fileID: 847090356}
   targetRenderer: {fileID: 495861655}
-  newMaterial: {fileID: 2100000, guid: 7f92626552a94b2489b4cc2601b0b2d1, type: 2}
+  newMaterial: {fileID: 2100000, guid: f45e66fd11710ca418bb0e28ffbae372, type: 2}
   scriptToEnable: {fileID: 495861656}
   interactDistance: 5
   interactionKey: 101
