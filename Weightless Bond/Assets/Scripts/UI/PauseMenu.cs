@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine.UI; // <- add this
+using UnityEngine.UI;
+using UnityEngine.SceneManagement; // <- for Back to Menu (Scene 0)
 
 public class PauseMenu : MonoBehaviour
 {
@@ -8,9 +9,23 @@ public class PauseMenu : MonoBehaviour
     [Tooltip("Assign your pause menu UI (Canvas or panel) here.")]
     public GameObject pauseMenuUI;
 
-    // NEW: assign the slider from your pause menu UI
     [Tooltip("Master volume slider (0..1).")]
     public Slider volumeSlider;
+
+    [Header("Buttons")]
+    [Tooltip("Button that resumes gameplay.")]
+    public Button resumeButton;
+
+    [Tooltip("Button that returns to main menu (Scene 0).")]
+    public Button backToMenuButton;
+
+    [Header("Button Images (Optional)")]
+    [Tooltip("If assigned, these sprites will be applied to the buttons' Image component on Start.")]
+    public Sprite resumeButtonSprite;
+    public Sprite backToMenuButtonSprite;
+
+    [Tooltip("If true, apply sprites above to the buttons' Image and set native size on Start.")]
+    public bool applyButtonSpritesOnStart = true;
 
     [Header("Settings")]
     [Tooltip("Optional: Lock or unlock cursor when pausing.")]
@@ -26,7 +41,28 @@ public class PauseMenu : MonoBehaviour
         if (pauseMenuUI != null)
             pauseMenuUI.SetActive(false);
 
-        // Init slider from saved volume (if assigned)
+        // Wire up UI callbacks
+        if (resumeButton != null)
+            resumeButton.onClick.AddListener(ResumeGame);
+        if (backToMenuButton != null)
+            backToMenuButton.onClick.AddListener(BackToMenu);
+
+        // Optionally apply button sprites
+        if (applyButtonSpritesOnStart)
+        {
+            if (resumeButton != null && resumeButtonSprite != null)
+            {
+                var img = resumeButton.GetComponent<Image>();
+                if (img != null) { img.sprite = resumeButtonSprite; img.SetNativeSize(); }
+            }
+            if (backToMenuButton != null && backToMenuButtonSprite != null)
+            {
+                var img = backToMenuButton.GetComponent<Image>();
+                if (img != null) { img.sprite = backToMenuButtonSprite; img.SetNativeSize(); }
+            }
+        }
+
+        // Init volume slider
         if (volumeSlider != null && AudioController.Instance != null)
         {
             volumeSlider.minValue = 0f;
@@ -42,6 +78,11 @@ public class PauseMenu : MonoBehaviour
     {
         if (volumeSlider != null)
             volumeSlider.onValueChanged.RemoveListener(OnVolumeChanged);
+
+        if (resumeButton != null)
+            resumeButton.onClick.RemoveListener(ResumeGame);
+        if (backToMenuButton != null)
+            backToMenuButton.onClick.RemoveListener(BackToMenu);
     }
 
     void Update()
@@ -50,17 +91,13 @@ public class PauseMenu : MonoBehaviour
             TogglePause();
     }
 
-    public void TogglePause()
-    {
-        SetPause(!IsPaused);
-    }
+    public void TogglePause() => SetPause(!IsPaused);
 
     private void OnVolumeChanged(float v)
     {
         if (AudioController.Instance != null)
             AudioController.Instance.SetVolume(v);
     }
-
 
     public void SetPause(bool pause)
     {
@@ -89,6 +126,7 @@ public class PauseMenu : MonoBehaviour
                 Cursor.lockState = CursorLockMode.Locked;
             }
         }
+
         if (pause && volumeSlider != null && AudioController.Instance != null)
             volumeSlider.value = AudioController.Instance.GetVolume();
     }
@@ -98,13 +136,9 @@ public class PauseMenu : MonoBehaviour
     void PauseAllAudio()
     {
         pausedAudioSources.Clear();
-
-        // Find all active AudioSources in the scene
         AudioSource[] allSources = FindObjectsOfType<AudioSource>();
-
         foreach (var src in allSources)
         {
-            // If the source is playing, pause it and remember it
             if (src.isPlaying)
             {
                 src.Pause();
@@ -115,19 +149,25 @@ public class PauseMenu : MonoBehaviour
 
     void ResumeAllAudio()
     {
-        // Resume only those that were playing before pause
         foreach (var src in pausedAudioSources)
         {
             if (src != null)
                 src.UnPause();
         }
-
         pausedAudioSources.Clear();
     }
 
     // --- UI Buttons ---
 
     public void ResumeGame() => SetPause(false);
+
+    public void BackToMenu()
+    {
+        // Ensure timescale/cursor/audio are restored
+        if (IsPaused) SetPause(false);
+        // Load main menu (build index 0)
+        SceneManager.LoadScene(0);
+    }
 
     public void QuitGame()
     {
