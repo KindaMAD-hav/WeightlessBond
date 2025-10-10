@@ -11,9 +11,13 @@ public class BlockSummonerPreview : MonoBehaviour
     public float blockStopThreshold = 0.1f;
     public float gridSpacing = 1.5f;
 
+    [Header("Return Scatter Settings")]
+    public float scatterRadius = 2f;        // how far they scatter when returning
+    public float scatterDelayRange = 0.5f;  // max random delay before returning
+
     [Header("References")]
     public Camera playerCamera;
-    public GameObject ghostBlockPrefab; // 👻 Prefab for the transparent preview cube
+    public GameObject ghostBlockPrefab;
     public ParticleSystem summonEffectPrefab;
 
     private List<Transform> blocks = new List<Transform>();
@@ -29,7 +33,6 @@ public class BlockSummonerPreview : MonoBehaviour
 
     void Start()
     {
-        // Find all summonable blocks
         GameObject[] foundBlocks = GameObject.FindGameObjectsWithTag("SummonBlock");
         foreach (var obj in foundBlocks)
         {
@@ -55,7 +58,7 @@ public class BlockSummonerPreview : MonoBehaviour
             }
             else if (isPlaced)
             {
-                StartCoroutine(ReturnBlocks());
+                StartCoroutine(ReturnBlocksWithScatter());
             }
         }
 
@@ -65,13 +68,11 @@ public class BlockSummonerPreview : MonoBehaviour
         }
     }
 
-    // 👻 Show low-opacity preview grid
     private void ShowPreview()
     {
         isPreviewing = true;
         Debug.Log("[BlockSummoner] Showing placement preview.");
 
-        // Create ghost blocks if not already
         if (ghostBlocks.Count == 0)
         {
             for (int i = 0; i < 9; i++)
@@ -93,18 +94,12 @@ public class BlockSummonerPreview : MonoBehaviour
         targetPoint = playerCamera.transform.position + playerCamera.transform.forward * summonDistance;
 
         if (Physics.Raycast(ray, out RaycastHit hit, summonDistance))
-        {
             targetPoint = hit.point;
-        }
 
         List<Vector3> gridOffsets = new List<Vector3>();
         for (int x = -1; x <= 1; x++)
-        {
             for (int z = -1; z <= 1; z++)
-            {
                 gridOffsets.Add(new Vector3(x * gridSpacing, 0, z * gridSpacing));
-            }
-        }
 
         gridPositions = new Vector3[gridOffsets.Count];
         for (int i = 0; i < gridOffsets.Count; i++)
@@ -125,7 +120,6 @@ public class BlockSummonerPreview : MonoBehaviour
         foreach (var ghost in ghostBlocks)
             ghost.SetActive(false);
 
-        // Play particle effect at center
         if (summonEffectPrefab != null)
         {
             ParticleSystem effect = Instantiate(summonEffectPrefab, targetPoint, Quaternion.identity);
@@ -135,28 +129,58 @@ public class BlockSummonerPreview : MonoBehaviour
 
         int count = Mathf.Min(blocks.Count, gridPositions.Length);
         for (int i = 0; i < count; i++)
-        {
             StartCoroutine(MoveBlockTo(blocks[i], gridPositions[i]));
-        }
 
         yield return new WaitForSeconds(1.5f);
         isMoving = false;
     }
 
-    private IEnumerator ReturnBlocks()
+    /// <summary>
+    /// Returns blocks with a random scatter movement.
+    /// </summary>
+    private IEnumerator ReturnBlocksWithScatter()
     {
         isMoving = true;
-        Debug.Log("[BlockSummoner] Returning blocks to original positions.");
+        Debug.Log("[BlockSummoner] Returning blocks with scatter effect.");
 
         foreach (var block in blocks)
         {
             if (originalPositions.ContainsKey(block))
-                StartCoroutine(MoveBlockTo(block, originalPositions[block]));
+            {
+                // Random scatter direction
+                Vector3 scatterOffset = Random.insideUnitSphere * scatterRadius;
+                scatterOffset.y = Mathf.Abs(scatterOffset.y); // make sure they go slightly upward visually
+
+                // Random delay before starting return
+                float randomDelay = Random.Range(0f, scatterDelayRange);
+
+                StartCoroutine(ScatterAndReturn(block, scatterOffset, randomDelay));
+            }
         }
 
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(1.5f + scatterDelayRange);
         isPlaced = false;
         isMoving = false;
+    }
+
+    /// <summary>
+    /// Makes the block move to a random offset and then back to its original position.
+    /// </summary>
+    private IEnumerator ScatterAndReturn(Transform block, Vector3 scatterOffset, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        Vector3 midTarget = block.position + scatterOffset;
+
+        // Move to scattered position
+        yield return MoveBlockTo(block, midTarget);
+
+        // Small pause before returning
+        yield return new WaitForSeconds(0.2f);
+
+        // Move back to original
+        if (originalPositions.ContainsKey(block))
+            yield return MoveBlockTo(block, originalPositions[block]);
     }
 
     private IEnumerator MoveBlockTo(Transform block, Vector3 target)
