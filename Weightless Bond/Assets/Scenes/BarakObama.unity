@@ -19554,6 +19554,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 282811687263653554, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: respawnSfx
+      value: 
+      objectReference: {fileID: 8300000, guid: 94994b7cba921084f97a8b22a17cd25f, type: 3}
+    - target: {fileID: 282811687263653554, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: respawnOnDeath
       value: 0
       objectReference: {fileID: 0}

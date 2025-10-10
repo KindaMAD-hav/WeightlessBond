@@ -44,6 +44,14 @@ public class PlayerHealth : MonoBehaviour
     public System.Action OnPlayerDeath;
     public System.Action OnPlayerRespawn;
 
+    [Header("Audio")]
+    [Tooltip("Possible sound effects that can play when the player respawns.")]
+    public AudioClip[] respawnSfxClips;
+
+    [Tooltip("Volume for respawn sound.")]
+    [Range(0f, 1f)] public float respawnVolume = 1f;
+
+
     // --- Add to PlayerHealth.cs ---
     public void SetRespawnPoint(Transform point)
     {
@@ -87,6 +95,16 @@ public class PlayerHealth : MonoBehaviour
         // Notify listeners/UI
         OnPlayerRespawn?.Invoke();
         OnHealthChanged?.Invoke(currentHealth);
+
+        // --- Play a random respawn SFX ---
+        if (respawnSfxClips != null && respawnSfxClips.Length > 0)
+        {
+            int index = Random.Range(0, respawnSfxClips.Length);
+            var clip = respawnSfxClips[index];
+            if (clip)
+                AudioSource.PlayClipAtPoint(clip, transform.position, respawnVolume);
+        }
+
 
         Debug.Log("Player respawned immediately at checkpoint.");
     }
