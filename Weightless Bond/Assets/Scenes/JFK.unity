@@ -19816,6 +19816,10 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8534113316184284922, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
+      propertyPath: inspectKey
+      value: 103
+      objectReference: {fileID: 0}
     - target: {fileID: 9217990419361027767, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: m_Name
       value: Player (1)
@@ -57365,6 +57369,9 @@ MonoBehaviour:
   preloadClipsOnStart: 1
   secondSfxOnDoorComplete: 1
   debugLogs: 1
+  scriptToEnable: {fileID: 0}
+  enableOnDoorComplete: 1
+  enableDelay: 0
 --- !u!82 &1550843821
 AudioSource:
   m_ObjectHideFlags: 0
@@ -71738,6 +71745,9 @@ MonoBehaviour:
   preloadClipsOnStart: 1
   secondSfxOnDoorComplete: 1
   debugLogs: 1
+  scriptToEnable: {fileID: 920094441}
+  enableOnDoorComplete: 1
+  enableDelay: 0
 --- !u!82 &1932819832
 AudioSource:
   m_ObjectHideFlags: 0
