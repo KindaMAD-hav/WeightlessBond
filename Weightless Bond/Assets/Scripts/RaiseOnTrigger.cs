@@ -27,11 +27,23 @@ public class RaiseOnTrigger : MonoBehaviour
     public bool secondSfxOnDoorComplete = true;
     public bool debugLogs = true;
 
+    [Header("Enable Script On Open")]
+    [Tooltip("The script/component you want to enable when the door opens.")]
+    public MonoBehaviour scriptToEnable;
+
+    [Tooltip("If true, enable after the door has fully opened. If false, enable as soon as the door begins opening.")]
+    public bool enableOnDoorComplete = true;
+
+    [Tooltip("Optional delay (seconds) before enabling the script.")]
+    public float enableDelay = 0f;
+
     private Vector3 startPos;
     private Vector3 targetPos;
     private bool isOpening = false;
     private bool hasOpened = false;
+
     private bool secondQueued = false;
+    private bool scriptEnableQueuedOrDone = false;
 
     private AudioSource audioSource;
 
@@ -49,6 +61,10 @@ public class RaiseOnTrigger : MonoBehaviour
             s_firstPlayedThisScene = false;
             s_secondPlayedThisScene = false;
         }
+
+        // Ensure target script starts disabled
+        if (scriptToEnable != null)
+            scriptToEnable.enabled = false;
     }
 
     private void Start()
@@ -87,6 +103,10 @@ public class RaiseOnTrigger : MonoBehaviour
                 isOpening = false;
                 hasOpened = true;
 
+                // Enable script when door completes, if that's the chosen timing
+                if (enableOnDoorComplete)
+                    ScheduleEnableTargetScript();
+
                 if (playDoorSfx && !secondQueued && secondSfxOnDoorComplete && !s_secondPlayedThisScene)
                 {
                     PlaySecondSfx();
@@ -101,6 +121,10 @@ public class RaiseOnTrigger : MonoBehaviour
 
         isOpening = true;
         if (debugLogs) Debug.Log(targetObject.name + " is opening smoothly!");
+
+        // Enable script when door starts, if that's the chosen timing
+        if (!enableOnDoorComplete)
+            ScheduleEnableTargetScript();
 
         if (playDoorSfx && !s_firstPlayedThisScene)
         {
@@ -141,5 +165,38 @@ public class RaiseOnTrigger : MonoBehaviour
         if (clip == null) return;
         if (clip.loadState != AudioDataLoadState.Loaded)
             clip.LoadAudioData();
+    }
+
+    // === Script enabling helpers ===
+    private void ScheduleEnableTargetScript()
+    {
+        if (scriptEnableQueuedOrDone) return;
+
+        if (enableDelay <= 0f)
+        {
+            EnableTargetScriptNow();
+        }
+        else
+        {
+            // Queue once
+            scriptEnableQueuedOrDone = true;
+            Invoke(nameof(EnableTargetScriptNow), enableDelay);
+        }
+    }
+
+    private void EnableTargetScriptNow()
+    {
+        // If not queued via Schedule, mark it done here to avoid double-enabling attempts
+        if (!scriptEnableQueuedOrDone) scriptEnableQueuedOrDone = true;
+
+        if (scriptToEnable != null)
+        {
+            scriptToEnable.enabled = true;
+            if (debugLogs) Debug.Log($"Enabled script: {scriptToEnable.GetType().Name}");
+        }
+        else if (debugLogs)
+        {
+            Debug.LogWarning("No script assigned to 'scriptToEnable'.");
+        }
     }
 }
