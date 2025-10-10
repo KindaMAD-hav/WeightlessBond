@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class PanelSwitcher : MonoBehaviour
 {
     [Header("UI Panels")]
-    [Tooltip("Assign all your panels here. Make sure only one is active at a time.")]
+    [Tooltip("Assign all your panels here. The first one will be the starting panel.")]
     public GameObject[] panels;
 
     [Header("Buttons (Optional)")]
@@ -17,15 +17,27 @@ public class PanelSwitcher : MonoBehaviour
 
     void Start()
     {
-        // Hide all panels at start
+        // ✅ Hide all panels first
         foreach (var panel in panels)
         {
-            if (panel != null) panel.SetActive(false);
+            if (panel != null)
+                panel.SetActive(false);
         }
 
-        // Optionally assign back button behavior
+        // ✅ Set first panel as the starting one (main menu, etc.)
+        if (panels.Length > 0 && panels[0] != null)
+        {
+            currentPanel = panels[0];
+            currentPanel.SetActive(true);
+            Debug.Log($"[PanelSwitcher] Starting panel set to {currentPanel.name}");
+        }
+
+        // Hook up Back button (optional)
         if (backButton != null)
+        {
             backButton.onClick.AddListener(GoBack);
+            backButton.gameObject.SetActive(false); // Hide at start
+        }
     }
 
     /// <summary>
@@ -34,21 +46,26 @@ public class PanelSwitcher : MonoBehaviour
     public void ShowPanel(GameObject newPanel)
     {
         if (newPanel == null) return;
+        if (currentPanel == newPanel)
+        {
+            Debug.Log("[PanelSwitcher] Tried to switch to the same panel — ignored.");
+            return;
+        }
 
-        // Hide current
+        // ✅ Hide the current panel if one is active
         if (currentPanel != null)
         {
             currentPanel.SetActive(false);
             panelHistory.Push(currentPanel);
         }
 
-        // Show new
+        // ✅ Show the new panel
         newPanel.SetActive(true);
         currentPanel = newPanel;
 
         Debug.Log($"[PanelSwitcher] Switched to {newPanel.name}");
 
-        // Enable/disable back button based on history
+        // ✅ Enable/disable back button
         if (backButton != null)
             backButton.gameObject.SetActive(panelHistory.Count > 0);
     }
@@ -64,23 +81,23 @@ public class PanelSwitcher : MonoBehaviour
             return;
         }
 
-        // Hide current
+        // Hide the current panel
         if (currentPanel != null)
             currentPanel.SetActive(false);
 
-        // Show previous
+        // Show the previous one
         currentPanel = panelHistory.Pop();
         currentPanel.SetActive(true);
 
         Debug.Log($"[PanelSwitcher] Went back to {currentPanel.name}");
 
-        // Disable back button if no more panels in history
+        // Disable back button if no more history
         if (backButton != null)
             backButton.gameObject.SetActive(panelHistory.Count > 0);
     }
 
     /// <summary>
-    /// Optional: Clear navigation history and show only this panel.
+    /// Clears history and shows only this panel (useful for resetting navigation).
     /// </summary>
     public void ResetToPanel(GameObject panel)
     {
@@ -101,4 +118,3 @@ public class PanelSwitcher : MonoBehaviour
         Debug.Log($"[PanelSwitcher] Reset navigation to {panel?.name ?? "None"}");
     }
 }
-
