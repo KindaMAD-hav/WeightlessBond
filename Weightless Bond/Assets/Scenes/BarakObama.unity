@@ -10029,9 +10029,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3347923146196349583, guid: 92b13bc26932fcd40962d310d812cd7c, type: 3}
+      propertyPath: sfxVolume
+      value: 0.15
+      objectReference: {fileID: 0}
     - target: {fileID: 6567560714140040454, guid: 92b13bc26932fcd40962d310d812cd7c, type: 3}
       propertyPath: m_Name
       value: GravityRoom (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7875756577389599189, guid: 92b13bc26932fcd40962d310d812cd7c, type: 3}
+      propertyPath: sfxVolume
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 8479156018174329098, guid: 92b13bc26932fcd40962d310d812cd7c, type: 3}
+      propertyPath: sfxVolume
+      value: 0.15
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
