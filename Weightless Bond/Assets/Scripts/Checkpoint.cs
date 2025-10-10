@@ -12,6 +12,10 @@ public class Checkpoint : MonoBehaviour
     [Tooltip("Optional SFX when a NEW checkpoint is reached.")]
     public AudioClip reachedSfx;
 
+    [Range(0f, 1f)]
+    [Tooltip("Volume for the checkpoint SFX. Default = 25%.")]
+    public float sfxVolume = 0.25f;
+
     void OnTriggerEnter(Collider other) { TrySetCheckpoint(other); }
     void OnCollisionEnter(Collision c) { TrySetCheckpoint(c.collider); }
 
@@ -28,7 +32,9 @@ public class Checkpoint : MonoBehaviour
 
         health.SetRespawnPoint(target);
 
-        if (reachedSfx) AudioSource.PlayClipAtPoint(reachedSfx, target.position);
+        if (reachedSfx)
+            AudioSource.PlayClipAtPoint(reachedSfx, target.position, sfxVolume);
+
         if (oneTime) enabled = false;
 
         Debug.Log($"Checkpoint set → {target.name}");

@@ -30907,6 +30907,10 @@ PrefabInstance:
       propertyPath: m_Volume
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 636779982732733309, guid: c00a5ce29e80411469363d442b6468f8, type: 3}
+      propertyPath: defaultTrack
+      value: 
+      objectReference: {fileID: 8300000, guid: 50ba600ea31278448bb81fcece0ee1f4, type: 3}
     - target: {fileID: 5286462170215353504, guid: c00a5ce29e80411469363d442b6468f8, type: 3}
       propertyPath: m_Volume
       value: 0.3
