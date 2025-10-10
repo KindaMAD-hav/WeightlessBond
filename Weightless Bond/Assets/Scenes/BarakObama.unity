@@ -71049,7 +71049,7 @@ MonoBehaviour:
   playDoorSfx: 1
   doorOpenSfx: {fileID: 8300000, guid: 5e25b5fa75a01a0448dde55425ee94a3, type: 3}
   doorOpenVolume: 0.4
-  secondSfx: {fileID: 8300000, guid: 03629a11a05d54e419add4ee2dc39ffe, type: 3}
+  secondSfx: {fileID: 8300000, guid: f5d1f24de485f9b488e548765ef53bf7, type: 3}
   secondSfxVolume: 2
   preloadClipsOnStart: 1
   secondSfxOnDoorComplete: 1
