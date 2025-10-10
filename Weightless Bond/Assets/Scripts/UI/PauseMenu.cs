@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement; // <- for Back to Menu (Scene 0)
+using UnityEngine.SceneManagement; // For Back to Menu (Scene 0)
 
 public class PauseMenu : MonoBehaviour
 {
@@ -33,14 +33,25 @@ public class PauseMenu : MonoBehaviour
 
     public static bool IsPaused { get; private set; } = false;
 
-    // Keep track of which AudioSources were playing when paused
     private List<AudioSource> pausedAudioSources = new List<AudioSource>();
+
+    // -----------------------------------------------------------
+    // 🟢 FIX: Make sure pause menu never shows on Awake
+    // -----------------------------------------------------------
+    void Awake()
+    {
+        if (pauseMenuUI != null)
+        {
+            pauseMenuUI.SetActive(false); // Force hide before Start runs
+            Debug.Log("[PauseMenu] Awake: pause menu UI forced off.");
+        }
+
+        IsPaused = false;
+        Time.timeScale = 1f;
+    }
 
     void Start()
     {
-        if (pauseMenuUI != null)
-            pauseMenuUI.SetActive(false);
-
         // Wire up UI callbacks
         if (resumeButton != null)
             resumeButton.onClick.AddListener(ResumeGame);
@@ -53,12 +64,20 @@ public class PauseMenu : MonoBehaviour
             if (resumeButton != null && resumeButtonSprite != null)
             {
                 var img = resumeButton.GetComponent<Image>();
-                if (img != null) { img.sprite = resumeButtonSprite; img.SetNativeSize(); }
+                if (img != null)
+                {
+                    img.sprite = resumeButtonSprite;
+                    img.SetNativeSize();
+                }
             }
             if (backToMenuButton != null && backToMenuButtonSprite != null)
             {
                 var img = backToMenuButton.GetComponent<Image>();
-                if (img != null) { img.sprite = backToMenuButtonSprite; img.SetNativeSize(); }
+                if (img != null)
+                {
+                    img.sprite = backToMenuButtonSprite;
+                    img.SetNativeSize();
+                }
             }
         }
 
@@ -71,7 +90,7 @@ public class PauseMenu : MonoBehaviour
             volumeSlider.onValueChanged.AddListener(OnVolumeChanged);
         }
 
-        SetPause(false);
+        // 🟢 Removed SetPause(false) — no longer needed here
     }
 
     void OnDestroy()
@@ -106,7 +125,8 @@ public class PauseMenu : MonoBehaviour
         if (pause)
         {
             Time.timeScale = 0f;
-            if (pauseMenuUI != null) pauseMenuUI.SetActive(true);
+            if (pauseMenuUI != null)
+                pauseMenuUI.SetActive(true);
 
             PauseAllAudio();
 
@@ -116,7 +136,8 @@ public class PauseMenu : MonoBehaviour
         else
         {
             Time.timeScale = 1f;
-            if (pauseMenuUI != null) pauseMenuUI.SetActive(false);
+            if (pauseMenuUI != null)
+                pauseMenuUI.SetActive(false);
 
             ResumeAllAudio();
 
@@ -131,8 +152,12 @@ public class PauseMenu : MonoBehaviour
             volumeSlider.value = AudioController.Instance.GetVolume();
     }
 
-    // --- Audio Handling ---
+    void OnEnable()
+    {
+        Debug.Log("Pause Menu enabled by: " + UnityEngine.StackTraceUtility.ExtractStackTrace());
+    }
 
+    // --- Audio Handling ---
     void PauseAllAudio()
     {
         pausedAudioSources.Clear();
@@ -158,14 +183,13 @@ public class PauseMenu : MonoBehaviour
     }
 
     // --- UI Buttons ---
-
     public void ResumeGame() => SetPause(false);
 
     public void BackToMenu()
     {
-        // Ensure timescale/cursor/audio are restored
-        if (IsPaused) SetPause(false);
-        // Load main menu (build index 0)
+        if (IsPaused)
+            SetPause(false);
+
         SceneManager.LoadScene(0);
     }
 
