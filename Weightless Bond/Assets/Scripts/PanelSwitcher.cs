@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class PanelSwitcher : MonoBehaviour
 {
     [Header("UI Panels")]
-    [Tooltip("Assign all your panels here. The first one will be the starting panel.")]
+    [Tooltip("Assign all your panels here. No panel will be active by default.")]
     public GameObject[] panels;
 
     [Header("Buttons (Optional)")]
@@ -15,22 +15,29 @@ public class PanelSwitcher : MonoBehaviour
     private Stack<GameObject> panelHistory = new Stack<GameObject>();
     private GameObject currentPanel;
 
-    void Start()
+    void Awake()
     {
-        // ✅ Hide all panels first
+        // 🔒 Ensure all panels are off before anything else runs
         foreach (var panel in panels)
         {
             if (panel != null)
                 panel.SetActive(false);
         }
 
-        // ✅ Set first panel as the starting one (main menu, etc.)
-        if (panels.Length > 0 && panels[0] != null)
+        currentPanel = null;
+        Debug.Log("[PanelSwitcher] Awake: All panels hidden, no default panel set.");
+    }
+
+    void Start()
+    {
+        // ✅ Just make sure all panels remain off — do NOT activate anything automatically
+        foreach (var panel in panels)
         {
-            currentPanel = panels[0];
-            currentPanel.SetActive(true);
-            Debug.Log($"[PanelSwitcher] Starting panel set to {currentPanel.name}");
+            if (panel != null)
+                panel.SetActive(false);
         }
+
+        currentPanel = null;
 
         // Hook up Back button (optional)
         if (backButton != null)
@@ -38,6 +45,8 @@ public class PanelSwitcher : MonoBehaviour
             backButton.onClick.AddListener(GoBack);
             backButton.gameObject.SetActive(false); // Hide at start
         }
+
+        Debug.Log("[PanelSwitcher] Start: Waiting for ShowPanel() call — no panel is active.");
     }
 
     /// <summary>
@@ -45,7 +54,12 @@ public class PanelSwitcher : MonoBehaviour
     /// </summary>
     public void ShowPanel(GameObject newPanel)
     {
-        if (newPanel == null) return;
+        if (newPanel == null)
+        {
+            Debug.LogWarning("[PanelSwitcher] Tried to show a null panel — ignored.");
+            return;
+        }
+
         if (currentPanel == newPanel)
         {
             Debug.Log("[PanelSwitcher] Tried to switch to the same panel — ignored.");
@@ -109,6 +123,7 @@ public class PanelSwitcher : MonoBehaviour
 
         panelHistory.Clear();
         currentPanel = panel;
+
         if (panel != null)
             panel.SetActive(true);
 
