@@ -1,22 +1,23 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // Optional, only if using TextMeshProUGUI
+using TMPro; // Optional — only needed if you use TextMeshProUGUI
 
 public class RaycastMaterialChanger : MonoBehaviour
 {
     [Header("References")]
-    public Camera playerCamera;               // Player's camera
-    public GameObject interactableObject;     // The object player interacts with
-    public Renderer targetRenderer;           // The object whose material will change
-    public Material newMaterial;              // The new material to apply
-    public MonoBehaviour scriptToEnable;      // Script 1 to enable after interaction
-    public MonoBehaviour secondScriptToEnable; // Script 2 to enable after OK button pressed
+    public Camera playerCamera;               // Player camera
+    public GameObject interactableObject;     // Object to interact with
+    public Renderer targetRenderer;           // Object whose material will change
+    public Material newMaterial;              // Material to apply
+    public MonoBehaviour scriptToEnable;      // Script to enable immediately after interaction
+    public MonoBehaviour secondScriptToEnable; // Script to enable after pressing OK
+    public MonoBehaviour playerMovementScript; // ✅ Player movement or controller script to pause/resume
 
     [Header("UI References")]
-    public GameObject itemPanel;              // Panel that shows after interaction
-    public TextMeshProUGUI itemTitleText;     // Optional: for title
-    public TextMeshProUGUI itemDescriptionText; // Optional: for description
-    public Button okButton;                   // OK button on the panel
+    public GameObject itemPanel;              // The pop-up panel
+    public TextMeshProUGUI itemTitleText;     // Optional text field for item name
+    public TextMeshProUGUI itemDescriptionText; // Optional text field for item info
+    public Button okButton;                   // OK button
 
     [Header("Settings")]
     public float interactDistance = 5f;
@@ -24,36 +25,38 @@ public class RaycastMaterialChanger : MonoBehaviour
     public float spinSpeed = 90f;
 
     [Header("Item Info")]
-    public string itemTitle = "Mysterious Artifact";
-    [TextArea] public string itemDescription = "An ancient relic humming with strange energy...";
+    public string itemTitle = "New Item Acquired!";
+    [TextArea] public string itemDescription = "You have obtained a mysterious artifact.";
 
     private bool isInteracted = false;
     private bool panelActive = false;
 
     void Start()
     {
-        // Disable extra scripts and UI at start
+        // Ensure all necessary scripts are off initially
         if (scriptToEnable != null)
             scriptToEnable.enabled = false;
         if (secondScriptToEnable != null)
             secondScriptToEnable.enabled = false;
 
+        // Hide the panel
         if (itemPanel != null)
             itemPanel.SetActive(false);
 
+        // Hook up OK button
         if (okButton != null)
             okButton.onClick.AddListener(OnOkButtonPressed);
     }
 
     void Update()
     {
-        // Make object spin until interacted
+        // Rotate interactable object for visual feedback
         if (!isInteracted && interactableObject != null)
         {
             interactableObject.transform.Rotate(Vector3.up, spinSpeed * Time.deltaTime, Space.World);
         }
 
-        // Check for player interaction
+        // Interaction input
         if (Input.GetKeyDown(interactionKey) && !panelActive)
         {
             TryInteract();
@@ -72,23 +75,23 @@ public class RaycastMaterialChanger : MonoBehaviour
         {
             if (hit.collider.gameObject == interactableObject)
             {
-                // Change material
+                // ✅ Change target material
                 targetRenderer.material = newMaterial;
-                Debug.Log($"Material changed on: {targetRenderer.gameObject.name}");
+                Debug.Log($"[Interaction] Changed material on {targetRenderer.gameObject.name}");
 
                 // Remove interactable
                 isInteracted = true;
                 Destroy(interactableObject);
-                Debug.Log("Interactable removed.");
+                Debug.Log("[Interaction] Interactable removed.");
 
-                // Enable first script (e.g. summoner, unlocker)
+                // Enable first script immediately
                 if (scriptToEnable != null)
                 {
                     scriptToEnable.enabled = true;
-                    Debug.Log($"Enabled script: {scriptToEnable.GetType().Name}");
+                    Debug.Log($"[Interaction] Enabled script: {scriptToEnable.GetType().Name}");
                 }
 
-                // Show item acquisition panel
+                // Show the “item acquired” panel
                 ShowItemPanel();
             }
         }
@@ -98,36 +101,45 @@ public class RaycastMaterialChanger : MonoBehaviour
     {
         if (itemPanel == null) return;
 
+        // Pause gameplay
+        Time.timeScale = 0f;
         panelActive = true;
-        itemPanel.SetActive(true);
 
-        // Update UI text
+        // Optionally disable player movement
+        if (playerMovementScript != null)
+            playerMovementScript.enabled = false;
+
+        // Show panel
+        itemPanel.SetActive(true);
         if (itemTitleText != null) itemTitleText.text = itemTitle;
         if (itemDescriptionText != null) itemDescriptionText.text = itemDescription;
 
-        // Pause time (optional)
-        Time.timeScale = 0f;
-        Debug.Log("Item panel opened.");
+        Debug.Log("[UI] Item panel shown — game paused.");
     }
 
-    void OnOkButtonPressed()
+    public void OnOkButtonPressed()
     {
         if (itemPanel == null) return;
 
-        // Hide panel
+        // ✅ Hide panel
         itemPanel.SetActive(false);
         panelActive = false;
 
-        // Resume game
+        // ✅ Resume game time
         Time.timeScale = 1f;
-        Debug.Log("OK pressed — panel closed.");
 
-        // Enable second script
+        // ✅ Re-enable player movement
+        if (playerMovementScript != null)
+            playerMovementScript.enabled = true;
+
+        // ✅ Enable second script (if assigned)
         if (secondScriptToEnable != null)
         {
             secondScriptToEnable.enabled = true;
-            Debug.Log($"Enabled script: {secondScriptToEnable.GetType().Name}");
+            Debug.Log($"[UI] Enabled script: {secondScriptToEnable.GetType().Name}");
         }
+
+        Debug.Log("[UI] OK button pressed — gameplay resumed.");
     }
 
     void OnDrawGizmosSelected()
