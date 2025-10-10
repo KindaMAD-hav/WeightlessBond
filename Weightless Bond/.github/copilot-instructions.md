@@ -2,7 +2,7 @@
 - Project name: Weightless Bond
 - Unity version: Unity 6000.2.2f1
 - Active game object:
-  - Name: TopSimple_Straight.019
+  - Name: Room1DoorTrigger
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
