@@ -19403,7 +19403,7 @@ PrefabInstance:
     - target: {fileID: 278319698575709458, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: pickupSfx
       value: 
-      objectReference: {fileID: 8300000, guid: bb5b62bbc44504c47b8c9c60402a5bcc, type: 3}
+      objectReference: {fileID: 8300000, guid: 2d70cdc5a1ab27c43ac201707e4a1ab7, type: 3}
     - target: {fileID: 278319698575709458, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: pickupVolume
       value: 2
@@ -19427,7 +19427,7 @@ PrefabInstance:
     - target: {fileID: 4261333749787763757, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: appearSound
       value: 
-      objectReference: {fileID: 8300000, guid: 557436a0768de0c4486bb26eaf04d53f, type: 3}
+      objectReference: {fileID: 8300000, guid: edbc873107b6f2b4fbd8d8b8f0bd2200, type: 3}
     - target: {fileID: 4261333749787763757, guid: 6ba58c94ae1b39d47b9eaa57cacfffd0, type: 3}
       propertyPath: appearVolume
       value: 2
