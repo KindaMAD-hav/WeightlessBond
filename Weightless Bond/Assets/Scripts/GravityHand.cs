@@ -222,7 +222,7 @@ public class GravityHand : MonoBehaviour
         // ---- Play pickup SFX once per scene ----
         if (enablePickupSfx && !s_pickupPlayedThisScene && pickupSfx != null)
         {
-            _audio.PlayOneShot(pickupSfx, Mathf.Clamp01(_audio.volume) * pickupVolume);
+            StartCoroutine(SfxGate.PlayQueued(this, _audio, pickupSfx, pickupVolume));
             s_pickupPlayedThisScene = true;
         }
     }
