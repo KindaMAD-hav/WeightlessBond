@@ -10,8 +10,8 @@ public class RaycastMaterialChanger : MonoBehaviour
     public Renderer targetRenderer;           // Object whose material will change
     public Material newMaterial;              // Material to apply
     public MonoBehaviour scriptToEnable;      // Script to enable immediately after interaction
-    public MonoBehaviour secondScriptToEnable; // Script to enable after pressing OK
-    public MonoBehaviour playerMovementScript; // ✅ Player movement or controller script to pause/resume
+    public MonoBehaviour secondScriptToEnable; // ✅ Now also enabled immediately
+    public MonoBehaviour playerMovementScript; // Player movement or controller script to pause/resume
 
     [Header("UI References")]
     public GameObject itemPanel;              // The pop-up panel
@@ -33,7 +33,7 @@ public class RaycastMaterialChanger : MonoBehaviour
 
     void Start()
     {
-        // Ensure all necessary scripts are off initially
+        // Ensure both scripts are off initially
         if (scriptToEnable != null)
             scriptToEnable.enabled = false;
         if (secondScriptToEnable != null)
@@ -84,11 +84,17 @@ public class RaycastMaterialChanger : MonoBehaviour
                 Destroy(interactableObject);
                 Debug.Log("[Interaction] Interactable removed.");
 
-                // Enable first script immediately
+                // ✅ Enable both scripts immediately
                 if (scriptToEnable != null)
                 {
                     scriptToEnable.enabled = true;
                     Debug.Log($"[Interaction] Enabled script: {scriptToEnable.GetType().Name}");
+                }
+
+                if (secondScriptToEnable != null)
+                {
+                    secondScriptToEnable.enabled = true;
+                    Debug.Log($"[Interaction] Enabled script: {secondScriptToEnable.GetType().Name}");
                 }
 
                 // Show the “item acquired” panel
@@ -114,7 +120,11 @@ public class RaycastMaterialChanger : MonoBehaviour
         if (itemTitleText != null) itemTitleText.text = itemTitle;
         if (itemDescriptionText != null) itemDescriptionText.text = itemDescription;
 
-        Debug.Log("[UI] Item panel shown — game paused.");
+        // ✅ Unlock and show the mouse cursor
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        Debug.Log("[UI] Item panel shown — game paused and cursor unlocked.");
     }
 
     public void OnOkButtonPressed()
@@ -132,14 +142,11 @@ public class RaycastMaterialChanger : MonoBehaviour
         if (playerMovementScript != null)
             playerMovementScript.enabled = true;
 
-        // ✅ Enable second script (if assigned)
-        if (secondScriptToEnable != null)
-        {
-            secondScriptToEnable.enabled = true;
-            Debug.Log($"[UI] Enabled script: {secondScriptToEnable.GetType().Name}");
-        }
+        // ✅ Lock and hide the cursor again
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
-        Debug.Log("[UI] OK button pressed — gameplay resumed.");
+        Debug.Log("[UI] OK button pressed — gameplay resumed and cursor relocked.");
     }
 
     void OnDrawGizmosSelected()
