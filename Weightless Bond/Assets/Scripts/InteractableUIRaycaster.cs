@@ -51,9 +51,7 @@ public class InteractableUIRaycaster : MonoBehaviour
             {
                 if (!hasPlayedOnceThisScene && audioSource != null && appearSound != null)
                 {
-                    // Clamp final volume so it never exceeds 2.0
-                    float finalVolume = Mathf.Clamp01(audioSource.volume) * appearVolume;
-                    audioSource.PlayOneShot(appearSound, finalVolume);
+                    StartCoroutine(SfxGate.PlayQueued(this, audioSource, appearSound, appearVolume));
                     hasPlayedOnceThisScene = true; // lock for the rest of the scene
                 }
             }
