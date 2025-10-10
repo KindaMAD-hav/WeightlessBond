@@ -1,27 +1,28 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // Optional — only needed if you use TextMeshProUGUI
+using TMPro;
+using System.Collections;
 
 public class RaycastMaterialChanger : MonoBehaviour
 {
     [Header("References")]
-    public Camera playerCamera;               // Player camera
-    public GameObject interactableObject;     // Object to interact with
-    public Renderer targetRenderer;           // Object whose material will change
-    public Material newMaterial;              // Material to apply
-    public MonoBehaviour scriptToEnable;      // Script to enable immediately after interaction
-    public MonoBehaviour secondScriptToEnable; // ✅ Now also enabled immediately
-    public MonoBehaviour playerMovementScript; // Player movement or controller script to pause/resume
+    public Camera playerCamera;
+    public GameObject interactableObject;
+    public Renderer targetRenderer;
+    public Material newMaterial;
+    public MonoBehaviour scriptToEnable;
+    public MonoBehaviour secondScriptToEnable;
+    public MonoBehaviour playerMovementScript;
 
     [Header("UI References")]
-    public GameObject itemPanel;              // The pop-up panel
-    public TextMeshProUGUI itemTitleText;     // Optional text field for item name
-    public TextMeshProUGUI itemDescriptionText; // Optional text field for item info
-    public Button okButton;                   // OK button
+    public GameObject itemPanel;
+    public TextMeshProUGUI itemTitleText;
+    public TextMeshProUGUI itemDescriptionText;
 
     [Header("Settings")]
     public float interactDistance = 5f;
     public KeyCode interactionKey = KeyCode.Q;
+    public KeyCode continueKey = KeyCode.Return; // Press Enter to continue
     public float spinSpeed = 90f;
 
     [Header("Item Info")]
@@ -33,33 +34,40 @@ public class RaycastMaterialChanger : MonoBehaviour
 
     void Start()
     {
-        // Ensure both scripts are off initially
+        // Disable any linked scripts initially
         if (scriptToEnable != null)
             scriptToEnable.enabled = false;
         if (secondScriptToEnable != null)
             secondScriptToEnable.enabled = false;
 
-        // Hide the panel
+        // Hide panel at start
         if (itemPanel != null)
             itemPanel.SetActive(false);
-
-        // Hook up OK button
-        if (okButton != null)
-            okButton.onClick.AddListener(OnOkButtonPressed);
     }
 
     void Update()
     {
-        // Rotate interactable object for visual feedback
+        // Rotate interactable object visually
         if (!isInteracted && interactableObject != null)
-        {
             interactableObject.transform.Rotate(Vector3.up, spinSpeed * Time.deltaTime, Space.World);
-        }
 
-        // Interaction input
-        if (Input.GetKeyDown(interactionKey) && !panelActive)
+        // Interact only when not paused or showing item panel
+        if (Input.GetKeyDown(interactionKey) && !panelActive && !PauseMenu.IsPaused)
         {
             TryInteract();
+        }
+
+        // ✅ Press Enter to close the panel
+        if (panelActive && Input.GetKeyDown(continueKey))
+        {
+            OnContinuePressed();
+        }
+
+        // Keep cursor visible if item panel is open
+        if (panelActive)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
     }
 
@@ -68,6 +76,12 @@ public class RaycastMaterialChanger : MonoBehaviour
         if (playerCamera == null || targetRenderer == null || newMaterial == null || interactableObject == null)
             return;
 
+        if (PauseMenu.IsPaused)
+        {
+            Debug.Log("[Interaction] Ignored because game is paused.");
+            return;
+        }
+
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
         RaycastHit hit;
 
@@ -75,16 +89,16 @@ public class RaycastMaterialChanger : MonoBehaviour
         {
             if (hit.collider.gameObject == interactableObject)
             {
-                // ✅ Change target material
+                // ✅ Change material
                 targetRenderer.material = newMaterial;
                 Debug.Log($"[Interaction] Changed material on {targetRenderer.gameObject.name}");
 
-                // Remove interactable
+                // Destroy the interactable
                 isInteracted = true;
                 Destroy(interactableObject);
                 Debug.Log("[Interaction] Interactable removed.");
 
-                // ✅ Enable both scripts immediately
+                // Enable linked scripts
                 if (scriptToEnable != null)
                 {
                     scriptToEnable.enabled = true;
@@ -97,7 +111,7 @@ public class RaycastMaterialChanger : MonoBehaviour
                     Debug.Log($"[Interaction] Enabled script: {secondScriptToEnable.GetType().Name}");
                 }
 
-                // Show the “item acquired” panel
+                // Show item panel
                 ShowItemPanel();
             }
         }
@@ -107,46 +121,53 @@ public class RaycastMaterialChanger : MonoBehaviour
     {
         if (itemPanel == null) return;
 
-        // Pause gameplay
-        Time.timeScale = 0f;
         panelActive = true;
+        Time.timeScale = 0f;
 
-        // Optionally disable player movement
         if (playerMovementScript != null)
             playerMovementScript.enabled = false;
 
-        // Show panel
         itemPanel.SetActive(true);
         if (itemTitleText != null) itemTitleText.text = itemTitle;
         if (itemDescriptionText != null) itemDescriptionText.text = itemDescription;
 
-        // ✅ Unlock and show the mouse cursor
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        Debug.Log("[UI] Item panel shown — game paused and cursor unlocked.");
+        Debug.Log("[UI] Item panel shown — press Enter to continue.");
     }
 
-    public void OnOkButtonPressed()
+    public void OnContinuePressed()
     {
-        if (itemPanel == null) return;
+        if (itemPanel == null || !panelActive) return;
 
-        // ✅ Hide panel
+        Debug.Log("[UI] Continue pressed — closing item panel.");
+
         itemPanel.SetActive(false);
         panelActive = false;
 
-        // ✅ Resume game time
+        // Resume gameplay
         Time.timeScale = 1f;
 
-        // ✅ Re-enable player movement
         if (playerMovementScript != null)
             playerMovementScript.enabled = true;
 
-        // ✅ Lock and hide the cursor again
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        StartCoroutine(ReLockCursorNextFrame());
+    }
 
-        Debug.Log("[UI] OK button pressed — gameplay resumed and cursor relocked.");
+    private IEnumerator ReLockCursorNextFrame()
+    {
+        yield return null; // wait one frame for input system to settle
+        if (!PauseMenu.IsPaused)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            Debug.Log("[UI] Gameplay resumed — cursor relocked.");
+        }
+        else
+        {
+            Debug.Log("[UI] Cursor left unlocked since pause menu is active.");
+        }
     }
 
     void OnDrawGizmosSelected()
